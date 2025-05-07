@@ -1,0 +1,28 @@
+.login-container {
+    max-width: 300px;
+    margin: 100px auto;
+    font-family: sans-serif;
+  }
+  
+  .login-title {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  
+  .login-form .form-group {
+    margin-bottom: 12px;
+  }
+  
+  .form-input {
+    display: block;
+    width: 100%;
+    padding: 8px;
+    margin-top: 4px;
+    box-sizing: border-box;
+  }
+  
+  .login-button {
+    width: 100%;
+    padding: 10px;
+    cursor: pointer;
+  }
