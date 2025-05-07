@@ -3,12 +3,37 @@ import './login.css';
 
 export default function Login() {
   const [username, setUsername]   = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword]   = useState('');
   const [isLoggedIn, setLoggedIn] = useState(false);
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoggedIn(true);
+  
+    try {
+      const response = await fetch("/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: username, // Assuming 'username' holds the user's email
+          password: password,
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Login failed");
+      }
+  
+      const data = await response.json();
+      console.log("Login successful:", data);
+      setLoggedIn(true);
+    } catch (error) {
+      console.error("Error during login:", error.message);
+      // Optionally, set an error state here to display an error message to the user
+    }
   };
 
   if (isLoggedIn) {
@@ -31,6 +56,17 @@ export default function Login() {
               className="form-input"
               value={username}
               onChange={e => setUsername(e.target.value)}
+              required
+            />
+          </label>
+        </div>
+        <div className="form-group">
+          <label>
+            Email
+            <input
+              className="form-input"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
               required
             />
           </label>
