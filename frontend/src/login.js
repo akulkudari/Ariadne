@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import './login.css';
 
 export default function Login() {
-  const [username, setUsername]   = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword]   = useState('');
+  const [password, setPassword] = useState('');
   const [isLoggedIn, setLoggedIn] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     try {
       const response = await fetch("/login", {
         method: "POST",
@@ -17,16 +17,17 @@ export default function Login() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: username, // Assuming 'username' holds the user's email
+          username: username,
+          email: email,
           password: password,
         }),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Login failed");
       }
-  
+
       const data = await response.json();
       console.log("Login successful:", data);
       setLoggedIn(true);
@@ -65,6 +66,7 @@ export default function Login() {
             Email
             <input
               className="form-input"
+              type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
