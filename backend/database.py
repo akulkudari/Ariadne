@@ -113,6 +113,7 @@ async def setup_database(initial_users: dict = None):
         if connection and connection.is_connected():
             connection.close()
             logger.info("Database connection closed")
+
 async def get_user_by_email(email: str) -> Optional[dict]:
     """Retrieve user from database by username."""
     connection = None
@@ -127,6 +128,7 @@ async def get_user_by_email(email: str) -> Optional[dict]:
             cursor.close()
         if connection and connection.is_connected():
             connection.close()
+
 def create_tables():
    """Creates tables for storing sensor data."""
    queries = {
@@ -209,6 +211,7 @@ async def get_user_by_id(user_id: int) -> Optional[dict]:
             cursor.close()
         if connection and connection.is_connected():
             connection.close()
+
 async def create_session(user_id: int, session_id: str) -> bool:
     """Create a new session in the database."""
     connection = None
@@ -226,6 +229,7 @@ async def create_session(user_id: int, session_id: str) -> bool:
             cursor.close()
         if connection and connection.is_connected():
             connection.close()
+
 async def get_session(session_id: str) -> Optional[dict]:
     """Retrieve session from database."""
     connection = None
@@ -247,6 +251,7 @@ async def get_session(session_id: str) -> Optional[dict]:
             cursor.close()
         if connection and connection.is_connected():
             connection.close()
+
 async def delete_session(session_id: str) -> bool:
     """Delete a session from the database."""
     connection = None
@@ -262,6 +267,7 @@ async def delete_session(session_id: str) -> bool:
             cursor.close()
         if connection and connection.is_connected():
             connection.close()
+
 def init_db():
     connection = get_db_connection()
     if connection:
