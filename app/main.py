@@ -59,9 +59,58 @@ def root():
     return FileResponse("app/static/index.html")
 
 @app.get("/register", response_class=FileResponse)
-def register():
+def register_page():
     return FileResponse("app/static/register.html")
 
+
+@app.post("/register")
+async def register_user(
+    request: Request,
+    email: str = Form(...),
+    username: str = Form(...),
+    password: str = Form(...),
+    password_confirm: str = Form(...),
+    deviceId: str = Form(...)  # Assuming you'll handle this later
+):
+    conn = db.get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Database connection error")
+
+    try:
+        cursor = conn.cursor()
+
+        # Check if user already exists
+        cursor.execute("SELECT id FROM users WHERE email = %s OR username = %s", (email, username))
+        user = cursor.fetchone()
+        if user:
+            raise HTTPException(status_code=400, detail="User already exists")
+
+        # Check password confirmation
+        if password != password_confirm:
+            raise HTTPException(status_code=400, detail="Passwords do not match")
+
+        # Hash the password
+        pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+        password_hash = pwd_context.hash(password)
+
+        # Insert the new user
+        insert_query = """
+            INSERT INTO users (username, email, password_hash)
+            VALUES (%s, %s, %s)
+        """
+        cursor.execute(insert_query, (username, email, password_hash))
+        conn.commit()
+
+        return {"message": "User registered successfully"}
+
+    except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+
+    finally:
+        cursor.close()
+        conn.close()
+            
+        
 @app.get("/login", response_class=FileResponse)
 def login_page():
     return FileResponse("app/static/login.html")
