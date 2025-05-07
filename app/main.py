@@ -58,6 +58,10 @@ async def authenticate_user(request: Request):
 def root():
     return FileResponse("app/static/index.html")
 
+@app.get("/register", response_class=FileResponse)
+def register():
+    return FileResponse("app/static/register.html")
+
 @app.get("/login", response_class=FileResponse)
 def login_page():
     return FileResponse("app/static/login.html")
