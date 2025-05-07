@@ -4,7 +4,7 @@ from fastapi.responses import FileResponse, RedirectResponse
 from mysql.connector import Error
 from pydantic import BaseModel
 from .database import init_db
-import app.database as db
+import backend.database as db
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -56,11 +56,11 @@ async def authenticate_user(request: Request):
 
 @app.get("/", response_class=FileResponse)
 def root():
-    return FileResponse("app/static/index.html")
+    return FileResponse("frontend/src/index.js")
 
 @app.get("/register", response_class=FileResponse)
 def register_page():
-    return FileResponse("app/static/register.html")
+    return FileResponse("frontend/src/registration.js")
 
 
 @app.post("/register")
@@ -113,7 +113,7 @@ async def register_user(
         
 @app.get("/login", response_class=FileResponse)
 def login_page():
-    return FileResponse("app/static/login.html")
+    return FileResponse("frontend/src/login.js")
 
 @app.post("/login")
 async def userlogin(request: Request, email: str = Form(...), password: str = Form(...)):
