@@ -1,12 +1,25 @@
-import logo from './logo.svg';
 import './App.css';
-import LoginPage from './login';
+import React, { useState } from 'react';
+import Login from './login';
+import Registration from "./registration"
 
 
 function App() {
+  const [stage, setStage] = useState('register');
+  const [user, setUser]   = useState('');
+
+  const handleRegistered = username => {
+    setUser(username);
+    setStage('login');
+  };
+
   return (
     <div className="App">
-        <LoginPage />
+      {stage === 'register' ? (
+        <Registration onRegistered={handleRegistered} />
+      ) : (
+        <Login initialUsername={user} />
+      )}
     </div>
   );
 }
