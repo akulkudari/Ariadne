@@ -15,16 +15,40 @@ export default function RegistrationPage({ onRegistered }) {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setError('');
-    // Simple validation
+  
     if (form.password !== form.password_confirm) {
       setError("Passwords don't match");
       return;
     }
-    onRegistered(form.username);
+  
+    try {
+      const formData = new FormData();
+      formData.append("email", form.email);
+      formData.append("username", form.username);
+      formData.append("password", form.password);
+      formData.append("password_confirm", form.password_confirm);
+      formData.append("deviceId", form.deviceId); // make sure this is set
+  
+      const res = await fetch("http://localhost:9000/register", {
+        method: "POST",
+        body: formData  // DO NOT set Content-Type manually
+      });
+  
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || "Registration failed");
+      }
+  
+      onRegistered(form.username);
+    } catch (err) {
+      setError(err.message);
+    }
   };
+  
+
 
   return (
     <div className="reg-container">
@@ -93,3 +117,4 @@ export default function RegistrationPage({ onRegistered }) {
     </div>
   );
 }
+

@@ -27,9 +27,11 @@ def get_db_connection():
     except Error as e:
         print(f"Error connecting to MySQL: {e}")
         return None
-async def setup_database(initial_users: dict = None):
-    connection = None
-    cursor = None
+    
+# async def setup_database(initial_users: dict = None):
+#     connection = None
+#     cursor = None
+    
 async def setup_database(initial_users: dict = None):
     """Creates user and session tables and populates initial user data if provided."""
     connection = None

@@ -7,33 +7,34 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [isLoggedIn, setLoggedIn] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
-
     try {
-      const response = await fetch("/login", {
+      console.log("here")
+      const response = await fetch("http://localhost:9000/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: username,
-          email: email,
-          password: password,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || "Login failed");
+  
+      if (response.status === 302) {
+        // backend redirected us after setting cookie
+        console.log("here3")
+        window.location.href = "/dashboard";
+        return;
       }
-
-      const data = await response.json();
-      console.log("Login successful:", data);
+  
+      if (!response.ok) {
+        console.log("here2")
+        const err = await response.json();
+        throw new Error(err.detail || "Login failed");
+      }
+  
+      // in case your backend ever returns JSON on success:
+      console.log("Login OK:", await response.json());
       setLoggedIn(true);
     } catch (error) {
       console.error("Error during login:", error.message);
-      // Optionally, set an error state here to display an error message to the user
     }
   };
 

@@ -1,12 +1,26 @@
 services:
+  db:
+    image: mysql:latest
+    restart: always
+    ports:
+      - "3307:3307"
+    volumes:
+      - ./data:/var/lib/mysql
+    env_file: .env
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u$$MYSQL_USER", "-p$$MYSQL_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
   web:
     build: .
     env_file:
       - .env
     ports:
-      - '8000:8000'
+      - '9000:9000'
     # bind COPY ./app /code/app and make sure fastapi runs with reload for this CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
     volumes:
-      - ./app:/code/app
+      - ./backend:/code/backend
       - ./certificate.pem:/certificate.pem
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 9000 --reload

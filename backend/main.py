@@ -1,27 +1,35 @@
 import time
 from fastapi import FastAPI, HTTPException, Request, Form
 from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.middleware.cors import CORSMiddleware
 from mysql.connector import Error
 from pydantic import BaseModel
+import uuid, time, logging, os
+from passlib.context import CryptContext
+import backend.database as db
+from backend.database import init_db, get_db_connection
 from .database import init_db
 import backend.database as db
 
 # Initialize FastAPI app
 app = FastAPI()
 
-
+# right after creating app:
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+logger = logging.getLogger(__name__)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # React dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # Initialize database on startup
 @app.on_event("startup")
 async def startup_event():
     time.sleep(20)
     init_db()
 
-
-# Pydantic model for request validation
-class StockCreate(BaseModel):
-    symbol: str
-    price: float
-    company_name: str
 
 async def authenticate_user(request: Request):
     session_id = request.cookies.get("sessionId")
