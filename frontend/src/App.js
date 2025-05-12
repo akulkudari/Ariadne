@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import RegistrationPage from './registration';
 import LoginPage        from './login'; 
 import './App.css';
+import Dashboard from './dashboard.js';
+
 
 export default function App() {
   const [stage, setStage] = useState('home');  // ← start on “home”
@@ -13,7 +15,7 @@ export default function App() {
       case 'login':
         return <LoginPage onLoggedIn={() => setStage('dashboard')} />;
       case 'dashboard':
-        return <h2>🛠️ Dashboard coming soon…</h2>;
+        return <Dashboard />;
       default:  // 'home'
         return (
           <div className="home-container">
