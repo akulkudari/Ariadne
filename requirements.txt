@@ -6,3 +6,5 @@ python-dotenv
 pandas
 python-multipart
 passlib[argon2]
+pydantic[email]
+email-validator

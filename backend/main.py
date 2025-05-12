@@ -1,15 +1,20 @@
 import time
 from fastapi import FastAPI, HTTPException, Request, Form
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from mysql.connector import Error
-from pydantic import BaseModel
 import uuid, time, logging, os
 from passlib.context import CryptContext
 import backend.database as db
 from backend.database import init_db, get_db_connection
 from .database import init_db
-import backend.database as db
+from pydantic import BaseModel, EmailStr
+
+
+class LoginData(BaseModel):
+    email: EmailStr
+    password: str
+
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -24,12 +29,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 # Initialize database on startup
 @app.on_event("startup")
 async def startup_event():
     time.sleep(20)
     init_db()
-
 
 async def authenticate_user(request: Request):
     session_id = request.cookies.get("sessionId")
@@ -111,7 +116,7 @@ async def register_user(
 
         return {"message": "User registered successfully"}
 
-    except mysql.connector.Error as e:
+    except Error as e:
         raise HTTPException(status_code=500, detail=f"Database error: {e}")
 
     finally:
@@ -124,9 +129,11 @@ def login_page():
     return FileResponse("frontend/src/login.js")
 
 @app.post("/login")
-async def userlogin(request: Request, email: str = Form(...), password: str = Form(...)):
+async def userlogin(request: Request, creds: LoginData):
     """Login endpoint to authenticate the user."""
-    conn = db.get_db_connection()
+    email = creds.email
+    password = creds.password
+    conn = db.get_db_connection()    
     if conn is None:
         raise HTTPException(status_code=500, detail="Database connection error")
     try:
@@ -141,20 +148,22 @@ async def userlogin(request: Request, email: str = Form(...), password: str = Fo
         # Extract the user data (id, email, password_hash)
         user_id, user_email, stored_password_hash = user
 
-
         # Verify the password
         pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
         if not pwd_context.verify(password, stored_password_hash):
-            return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid email or password"})
-        session_id = str(uuid.uuid4())
-        session = await db.create_session(user_id, session_id)
-        if not session:
-            response = RedirectResponse(url=f"/login", status_code=302)
-            return response
-        response = RedirectResponse(url=f"/dashboard", status_code=302)
-        response.set_cookie(key="sessionId", value=session_id, httponly=True, max_age=3600)
-        return response
-
+            raise HTTPException(status_code=400, detail="Invalid email or password")
+        
+        # need to resolve the sessions + cookies
+        
+        # session_id = str(uuid.uuid4())
+        # session = await db.create_session(user_id, session_id)
+        # if not session:
+        #     response = RedirectResponse(url=f"/login", status_code=302)
+        #     return response
+        # response = RedirectResponse(url=f"/dashboard", status_code=302)
+        # response.set_cookie(key="sessionId", value=session_id, httponly=True, max_age=3600)
+        return JSONResponse({"status": "ok"})
+       
     except Error as e:
         import traceback
         error_details = traceback.format_exc()
@@ -164,3 +173,7 @@ async def userlogin(request: Request, email: str = Form(...), password: str = Fo
     finally:
         cursor.close()
         conn.close()
+
+@app.get("/dashboard", response_class=FileResponse)
+def dashboard_page():
+    return FileResponse("frontend/src/index.js")  # or your built index.html
