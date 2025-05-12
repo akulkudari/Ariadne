@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import RegistrationPage from './registration';
-import LoginPage        from './login';
+import LoginPage        from './login'; 
+import './App.css';
 
 export default function App() {
   const [stage, setStage] = useState('home');  // ← start on “home”
@@ -15,20 +16,21 @@ export default function App() {
         return <h2>🛠️ Dashboard coming soon…</h2>;
       default:  // 'home'
         return (
-          <div style={{ textAlign: 'center', marginTop: 80 }}>
-            <h1>Welcome to Ariadne</h1>
-            <button
-              style={{ padding: '10px 20px', margin: '0 10px' }}
-              onClick={() => setStage('login')}
-            >
-              Login
-            </button>
-            <button
-              style={{ padding: '10px 20px', margin: '0 10px' }}
-              onClick={() => setStage('register')}
-            >
-              Register
-            </button>
+          <div className="home-container">
+            <div className="overlay-card">
+              <h1 className="main-heading">Welcome to Ariadne</h1>
+              <p className="tagline">
+                Your smart hiking companion—vibrations for direction, live metrics, and safety alerts in a durable, weather‑resistant design.
+              </p>
+              <div className="button-row">
+                <button className="btn btn-login" onClick={() => setStage('login')}>
+                  Log In
+                </button>
+                <button className="btn btn-start" onClick={() => setStage('register')}>
+                  Get Started
+                </button>
+              </div>
+            </div>
           </div>
         );
     }
