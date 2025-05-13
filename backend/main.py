@@ -15,6 +15,12 @@ class LoginData(BaseModel):
     email: EmailStr
     password: str
 
+class RegisterData(BaseModel):
+    email: EmailStr
+    username: str
+    password: str
+    password_confirm: str
+    deviceId: str
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -77,14 +83,12 @@ def register_page():
 
 
 @app.post("/register")
-async def register_user(
-    request: Request,
-    email: str = Form(...),
-    username: str = Form(...),
-    password: str = Form(...),
-    password_confirm: str = Form(...),
-    deviceId: str = Form(...)  # Assuming you'll handle this later
-):
+async def register_user(data: RegisterData):
+    email = data.email
+    username = data.username
+    password = data.password
+    password_confirm = data.password_confirm
+    deviceId = data.deviceId
     conn = db.get_db_connection()
     if conn is None:
         raise HTTPException(status_code=500, detail="Database connection error")

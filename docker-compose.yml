@@ -7,26 +7,26 @@ services:
     volumes:
       - ./data:/var/lib/mysql
     environment:
-      MYSQL_HOST: db
-      MYSQL_ROOT_PASSWORD: MarSD10
       MYSQL_DATABASE: defaultdb
-      MYSQL_USER: root
+      MYSQL_USER: vinumaradana
+      MYSQL_ROOT_PASSWORD: MarSD2004
       MYSQL_PASSWORD: MarSD2004
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u$$MYSQL_USER", "-p$$MYSQL_PASSWORD"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pMarSD10"]
       interval: 5s
       timeout: 5s
       retries: 5
       start_period: 30s
   web:
     build: .
+    depends_on:
+      db:
+        condition: service_healthy
     environment:
-      MYSQL_ROOT_PASSWORD: MarSD10
-      MYSQL_NAME: defaultdb
-      MYSQL_USER: root
-      MYSQL_PASSWORD: MarSD2004
-      MYSQL_HOST: db
       MYSQL_DATABASE: defaultdb
+      MYSQL_USER: vinumaradana
+      MYSQL_ROOT_PASSWORD: MarSD2004
+      MYSQL_PASSWORD: MarSD2004
     ports:
       - '9000:9000'
     # bind COPY ./app /code/app and make sure fastapi runs with reload for this CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
