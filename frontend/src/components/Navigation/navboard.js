@@ -17,17 +17,15 @@ export default function NavBoard() {
   useEffect(() => {
     const map = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12', // updated to v12 for directions
+      style: 'mapbox://styles/mapbox/streets-v12',
       center: [-79.4512, 43.6568],
       zoom: 13
     });
 
     mapRef.current = map;
 
-    // Add navigation controls
     map.addControl(new mapboxgl.NavigationControl());
 
-    // Add directions control
     const directions = new MapboxDirections({
       accessToken: mapboxgl.accessToken,
       unit: 'metric',
@@ -35,24 +33,21 @@ export default function NavBoard() {
     });
     map.addControl(directions, 'top-left');
 
-    // Smooth zoom on wheel scroll
-    map.scrollZoom.disable(); // disable default scroll zoom
+    map.scrollZoom.disable();
 
     mapContainer.current.addEventListener('wheel', (e) => {
       e.preventDefault();
       const zoom = map.getZoom();
       const delta = Math.sign(e.deltaY);
-      const newZoom = Math.max(0.5, Math.min(22, zoom - delta * 0.25));
+      const newZoom = Math.max(0.5, Math.min(22, zoom - delta));
       map.easeTo({ zoom: newZoom });
     }, { passive: false });
 
-    // Globe + fog settings
     map.setProjection('globe');
     map.on('style.load', () => {
       map.setFog({});
     });
 
-    // Auto-spin logic
     const secondsPerRevolution = 240;
     const maxSpinZoom = 5;
     const slowSpinZoom = 3;
@@ -81,17 +76,18 @@ export default function NavBoard() {
   }, []);
 
   return (
-    <div>
-      <header className="header">
-        <div className="header__logo">Ariadne</div>
-        <nav className="nav">
-          <a className="nav__link" href="/">Home</a>
-          <a className="nav__link" href="/dashboard">Dashboard</a>
-          <a className="nav__link" href="/nav">Navigation</a>
+    <div className="dashboard">
+      <header className="dashboard__header">
+        <div className="dashboard__logo">Ariadne</div>
+        <nav className="dashboard__nav">
+          <a href="#" className="dashboard__nav-link">Home</a>
+          <a href="#health" className="dashboard__nav-link">Health Tracker</a>
+          <a href="/nav" className="dashboard__nav-link">Navigation</a>
+          <a href="#profile" className="dashboard__nav-link">Profile</a>
         </nav>
       </header>
 
-      <div ref={mapContainer} style={{ width: '100%', height: '100vh' }} />
+      <div ref={mapContainer} className="dashboard__map" />
 
       <footer className="footer">
         <div className="footer__left">© 2025 Styck. All rights reserved.</div>
