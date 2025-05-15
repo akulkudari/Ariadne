@@ -19,7 +19,7 @@ def get_db_connection():
             port=int(os.getenv('MYSQL_PORT', '3306')),
             user=os.getenv('MYSQL_USER'),
             password=os.getenv('MYSQL_PASSWORD'),
-            database=os.getenv('MYSQL_DATABASE'),
+            database=os.getenv('MYSQL_DATABASE')
             # ssl_ca = os.getenv("MYSQL_SSL_CA", "").strip(),
             # ssl_verify_identity=True
         )
