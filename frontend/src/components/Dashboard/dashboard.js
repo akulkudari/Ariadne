@@ -13,7 +13,7 @@ const cards = [
     title: 'Navigation',
     img: navigationImg,
     desc: 'Find your way with ease using our detailed maps and trail guides.',
-    link: '#nav'
+    link: '/nav'
     },
   {
     title: 'Health Tracker',
