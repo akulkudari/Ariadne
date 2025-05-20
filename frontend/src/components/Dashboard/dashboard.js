@@ -4,9 +4,6 @@ import communityImg from '../../assets/images/community.jpg';
 import navigationImg from '../../assets/images/navigation.png';
 import healthImg from '../../assets/images/health.png';
 
-
-
-
 // you can replace these with real icons or <img> tags
 const cards = [
     {
@@ -19,14 +16,14 @@ const cards = [
     title: 'Health Tracker',
     img: healthImg,
     desc: 'Monitor your fitness levels and track your health metrics while you explore the great outdoors.',
-    link: '#health'
+    link: '/health'
   },
 
   {
     title: 'Community',
     img: communityImg,
     desc: 'Connect with fellow adventurers and share your experiences.',
-    link: '#community'
+    link: '/community'
   },
 ];
 
@@ -36,9 +33,10 @@ export default function Dashboard() {
       <header className="dashboard__header">
         <div className="dashboard__logo">Ariadne</div>
         <nav className="dashboard__nav">
-          <a href="#" className="dashboard__nav-link">Home</a>
-          <a href="#health" className="dashboard__nav-link">Health Tracker</a>
+          <a href="/dashboard" className="dashboard__nav-link">Home</a>
+          <a href="/health" className="dashboard__nav-link">Health Tracker</a>
           <a href="/nav" className="dashboard__nav-link">Navigation</a>
+          <a href="/community" className="dashboard__nav-link">Community</a>
           <a href="#profile" className="dashboard__nav-link">Profile</a>
         </nav>
       </header>
@@ -62,7 +60,7 @@ export default function Dashboard() {
 
       <footer className="dashboard__footer">
         <div className="dashboard__footer-left">
-          © 2025 Styck. All rights reserved.
+          © 2025 Ariadne. All rights reserved.
         </div>
       </footer>
     </div>

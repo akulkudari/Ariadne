@@ -4,6 +4,8 @@ import RegistrationPage from './components/Registration/registration';
 import LoginPage from './components/Login/login';
 import Dashboard from './components/Dashboard/dashboard';
 import Navigation from './components/Navigation/navboard';
+import Community from './components/Community/community';
+import Health from './components/Health/health';
 import './App.css';
 
 function HomePage() {
@@ -39,6 +41,8 @@ export default function App() {
           <Route path="/register" element={<RegistrationPage onRegistered={() => window.location.href = '/login'} />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/nav" element = {<Navigation/>} />
+          <Route path="/community" element={<Community />} />
+          <Route path="/health" element={<Health />} />
         </Routes>
       </div>
     </Router>

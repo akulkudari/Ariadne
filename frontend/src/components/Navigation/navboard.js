@@ -80,17 +80,20 @@ export default function NavBoard() {
       <header className="dashboard__header">
         <div className="dashboard__logo">Ariadne</div>
         <nav className="dashboard__nav">
-          <a href="#" className="dashboard__nav-link">Home</a>
-          <a href="#health" className="dashboard__nav-link">Health Tracker</a>
+          <a href="/dashboard" className="dashboard__nav-link">Home</a>
+          <a href="/health" className="dashboard__nav-link">Health Tracker</a>
           <a href="/nav" className="dashboard__nav-link">Navigation</a>
+          <a href="/community" className="dashboard__nav-link">Community</a>
           <a href="#profile" className="dashboard__nav-link">Profile</a>
         </nav>
       </header>
 
       <div ref={mapContainer} className="dashboard__map" />
 
-      <footer className="footer">
-        <div className="footer__left">© 2025 Styck. All rights reserved.</div>
+      <footer className="dashboard__footer">
+        <div className="dashboard__footer-left">
+          © 2025 Ariadne. All rights reserved.
+        </div>
       </footer>
     </div>
   );
