@@ -5,6 +5,7 @@ import MapboxDirections from '@mapbox/mapbox-gl-directions/dist/mapbox-gl-direct
 import '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './navboard.css';
+import Header from '../header'
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWt1ZGFyaSIsImEiOiJjbWFvam5tM3owNjgxMmtvOHZpYzNlbWdwIn0.hx9QD3NKieHATfs_btT-bw';
 
@@ -77,16 +78,7 @@ export default function NavBoard() {
 
   return (
     <div className="dashboard">
-      <header className="dashboard__header">
-        <div className="dashboard__logo">Ariadne</div>
-        <nav className="dashboard__nav">
-          <a href="/dashboard" className="dashboard__nav-link">Home</a>
-          <a href="/health" className="dashboard__nav-link">Health Tracker</a>
-          <a href="/nav" className="dashboard__nav-link">Navigation</a>
-          <a href="/community" className="dashboard__nav-link">Community</a>
-          <a href="/profile" className="dashboard__nav-link">Profile</a>
-        </nav>
-      </header>
+      <Header/>
 
       <div ref={mapContainer} className="dashboard__map" />
 

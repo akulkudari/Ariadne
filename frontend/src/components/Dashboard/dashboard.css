@@ -7,36 +7,6 @@
     color: #333;
   }
   
-  /* Header */
-  .dashboard__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #388e3c;
-    padding: 0.75rem 2rem;
-    color: white;
-  }
-  
-  .dashboard__logo {
-    font-size: 1.25rem;
-    font-weight: 600;
-  }
-  
-  .dashboard__nav {
-    display: flex;
-    gap: 1.5rem;
-  }
-  
-  .dashboard__nav-link {
-    color: white;
-    text-decoration: none;
-    font-weight: 500;
-    transition: opacity 0.2s;
-  }
-  .dashboard__nav-link:hover {
-    opacity: 0.8;
-  }
-  
   /* Main section */
   .dashboard__main {
     flex: 1;

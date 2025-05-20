@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './profile.css';
+import { useNavigate } from 'react-router-dom';
+import Header from '../header'
+
+
 
 function ProfilePage() {
   const [hikeStats, setHikeStats] = useState({
@@ -13,18 +17,15 @@ function ProfilePage() {
     console.log("Smartwatch data sync initialized...");
   }, []);
 
+  const navigate = useNavigate();
+
+    function handleLogout() {
+    // Clear user session if needed (e.g., localStorage.clear())
+        navigate('/'); // Go to home page
+    }
   return (
     <div className="profile">
-      <header className="dashboard__header">
-        <div className="dashboard__logo">Ariadne</div>
-        <nav className="dashboard__nav">
-          <a href="/dashboard" className="dashboard__nav-link">Home</a>
-          <a href="/health" className="dashboard__nav-link">Health Tracker</a>
-          <a href="/nav" className="dashboard__nav-link">Navigation</a>
-          <a href="/community" className="dashboard__nav-link">Community</a>
-          <a href="/profile" className="dashboard__nav-link">Profile</a>
-        </nav>
-      </header>
+      <Header />
 
       <main className="profile__main">
         <h1 className="profile__title">Your Hiking Profile</h1>
@@ -61,6 +62,8 @@ function ProfilePage() {
             Go to Community
           </button>
         </div>
+
+
       </main>
 
       <footer className="dashboard__footer">
