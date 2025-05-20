@@ -1,0 +1,101 @@
+.community {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    color: #333;
+  }
+  
+  .community__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #388e3c;
+    padding: 0.75rem 2rem;
+    color: white;
+  }
+  
+  .community__logo {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  
+  .community__nav {
+    display: flex;
+    gap: 1.5rem;
+  }
+  
+  .community__nav-link {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.2s;
+  }
+  
+  .community__nav-link:hover {
+    opacity: 0.8;
+  }
+  
+  .community__main {
+    flex: 1;
+    text-align: center;
+    padding: 2rem 1rem;
+  }
+  
+  .community__title {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    color: #247028;
+  }
+  
+  .community__subtitle {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    color: #555;
+  }
+  
+  .community__posts {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .community__post {
+    background-color: #e2efe2;
+    border-radius: 1rem;
+    padding: 1.25rem;
+    text-align: left;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .community__post-user {
+    font-weight: bold;
+    color: #2e7d32;
+    margin-bottom: 0.25rem;
+  }
+  
+  .community__post-content {
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+  }
+  
+  .community__post-time {
+    font-size: 0.875rem;
+    color: #777;
+  }
+  
+  .community__footer {
+    background-color: #388e3c;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 2rem;
+  }
+  
+  .community__footer-left {
+    font-size: 0.875rem;
+  }
+  

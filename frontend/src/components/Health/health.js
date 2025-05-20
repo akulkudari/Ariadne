@@ -10,7 +10,7 @@ export default function Health() {
          <a href="/health" className="dashboard__nav-link">Health Tracker</a>
          <a href="/nav" className="dashboard__nav-link">Navigation</a>
          <a href="/community" className="dashboard__nav-link">Community</a>
-         <a href="#profile" className="dashboard__nav-link">Profile</a>
+         <a href="/profile" className="dashboard__nav-link">Profile</a>
        </nav>
      </header>
 

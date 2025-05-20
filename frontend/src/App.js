@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard/dashboard';
 import Navigation from './components/Navigation/navboard';
 import Community from './components/Community/community';
 import Health from './components/Health/health';
+import Profile from './components/Profile/profile';
 import './App.css';
 
 function HomePage() {
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="/nav" element = {<Navigation/>} />
           <Route path="/community" element={<Community />} />
           <Route path="/health" element={<Health />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </div>
     </Router>

@@ -1,0 +1,118 @@
+.profile {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    color: #333;
+  }
+  
+  .profile__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #388e3c;
+    padding: 0.75rem 2rem;
+    color: white;
+  }
+  
+  .profile__logo {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  
+  .profile__nav {
+    display: flex;
+    gap: 1.5rem;
+  }
+  
+  .profile__nav-link {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.2s;
+  }
+  
+  .profile__nav-link:hover {
+    opacity: 0.8;
+  }
+  
+  .profile__main {
+    flex: 1;
+    text-align: center;
+    padding: 2rem 1rem;
+  }
+  
+  .profile__title {
+    font-size: 3.5rem;
+    margin-bottom: 0.5rem;
+    color: #247028;
+  }
+  
+  .profile__subtitle {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    color: #555;
+  }
+  
+  .profile__cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 2rem;
+    max-width: 1100px;
+    margin: 0 auto 2rem;
+  }
+  
+  .profile__card {
+    background-color: #e2efe2;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .profile__card-title {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: #2e7d32;
+  }
+  
+  .profile__card-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #134d18;
+  }
+  
+  .profile__section {
+    margin: 2rem auto;
+    max-width: 800px;
+    text-align: center;
+  }
+  
+  .profile__button {
+    margin-top: 1rem;
+    padding: 0.75rem 1.5rem;
+    background-color: #388e3c;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .profile__button:hover {
+    background-color: #2e7d32;
+  }
+  
+  .profile__footer {
+    background-color: #388e3c;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 2rem;
+  }
+  
+  .profile__footer-left {
+    font-size: 0.875rem;
+  }
+  
