@@ -55,40 +55,48 @@ def init_db():
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             );
         """)
-        #devices table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS devices (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT,
-                name VARCHAR(255),
-                registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
+                user_id INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
         """)
-        #location_data table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS location_data (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 device_id INT NOT NULL,
-                latitude DECIMAL(9,6),
-                longitude DECIMAL(9,6),
+                latitude FLOAT,
+                longitude FLOAT,
+                altitude FLOAT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE
             );
         """)
-        #health_data table
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS health_data (
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS accel_data (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 device_id INT NOT NULL,
-                heart_rate INT,
-                body_temp FLOAT,
-                spo2 INT,
-                recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (device_id) REFERENCES devices(id)
-                );
-            """
-        )
+                accel_x INT,
+                accel_y INT,
+                accel_z INT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE
+            );
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS gyro_data (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                device_id INT NOT NULL,
+                gyro_x INT,
+                gyro_y INT,
+                gyro_z INT,
+                temp FLOAT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE
+            );
+        """)
         conn.commit()
         print("Database initialized successfully")
     except Error as e:

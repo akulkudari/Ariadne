@@ -8,11 +8,11 @@ services:
       - ./data:/var/lib/mysql
     environment:
       MYSQL_DATABASE: defaultdb
-      MYSQL_USER: vmaradana
+      MYSQL_USER: akulkudari
       MYSQL_ROOT_PASSWORD: MarSD2004
       MYSQL_PASSWORD: MarSD2004
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pMarSD2004"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pMarSD10"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -24,7 +24,7 @@ services:
         condition: service_healthy
     environment:
       MYSQL_DATABASE: defaultdb
-      MYSQL_USER: vmaradana
+      MYSQL_USER: akulkudari
       MYSQL_ROOT_PASSWORD: MarSD2004
       MYSQL_PASSWORD: MarSD2004
     ports:

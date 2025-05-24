@@ -4,9 +4,26 @@ import './header.css'; // optional
 
 function Header() {
     const navigate = useNavigate();
+
+    async function handleLogout() {
+      try {
+        const response = await fetch('http://localhost:9000/login', {
+          method: 'DELETE',  // important to send cookies
+        });
   
-    function handleLogout() {
-        navigate('/'); // Go to home page
+        if (response.redirected) {
+          // backend returned a redirect, just follow it
+          window.location.href = response.url;
+        } else if (response.ok) {
+          // manually redirect on success
+          navigate('/login');
+        } else {
+          alert('Logout failed');
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+        alert('Logout error');
+      }
     }
 
   return (
@@ -18,7 +35,7 @@ function Header() {
         <a href="/nav" className="dashboard__nav-link">Navigation</a>
         <a href="/community" className="dashboard__nav-link">Community</a>
         <a href="/profile" className="dashboard__nav-link">Profile</a>
-        <button className="dashboard__logout-button" onClick={() => handleLogout(navigate)}>
+        <button className="dashboard__logout-button" onClick={() => handleLogout()}>
           Logout
         </button>
       </nav>

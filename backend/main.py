@@ -150,22 +150,22 @@ async def userlogin(request: Request, creds: LoginData):
             raise HTTPException(status_code=400, detail="Invalid email or password")
 
         # Extract the user data (id, email, password_hash)
-        user_id, user_email, stored_password_hash = user
+        user_id, user_email, password_input = user
 
         # Verify the password
         pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
-        if not pwd_context.verify(password, stored_password_hash):
+        if not pwd_context.verify(password, password_input):
             raise HTTPException(status_code=400, detail="Invalid email or password")
         
         # need to resolve the sessions + cookies
         
-        # session_id = str(uuid.uuid4())
-        # session = await db.create_session(user_id, session_id)
-        # if not session:
-        #     response = RedirectResponse(url=f"/login", status_code=302)
-        #     return response
-        # response = RedirectResponse(url=f"/dashboard", status_code=302)
-        # response.set_cookie(key="sessionId", value=session_id, httponly=True, max_age=3600)
+        session_id = str(uuid.uuid4())
+        session = await db.create_session(user_id, session_id)
+        if not session:
+             response = RedirectResponse(url=f"/login", status_code=302)
+             return response
+        response = RedirectResponse(url=f"/dashboard", status_code=302)
+        response.set_cookie(key="sessionId", value=session_id, httponly=True, max_age=3600)
         return JSONResponse({"status": "ok"})
        
     except Error as e:
@@ -177,6 +177,31 @@ async def userlogin(request: Request, creds: LoginData):
     finally:
         cursor.close()
         conn.close()
+
+@app.get("/cookie")
+async def getCookie(request: Request):
+    sessionID = request.cookies.get("sessionId")  # Match the actual cookie key
+    if not sessionID:
+        raise HTTPException(status_code=400, detail="No active session found")
+    
+    return JSONResponse(content={"sessionId": sessionID})
+@app.delete("/login")
+async def logout(request: Request):
+    sessionId = request.cookies.get("sessionId")
+    if not sessionId:
+        raise HTTPException(status_code=400, detail="No active session found")
+
+    try:
+        # Use your existing database method
+        success = await db.delete_session(sessionId)
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to delete session")
+
+        # Clear session cookie and redirect to login page
+        response = RedirectResponse(url="/login", status_code=302)
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Logout failed: {e}")
 
 @app.get("/dashboard", response_class=FileResponse)
 def dashboard_page():

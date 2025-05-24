@@ -28,6 +28,7 @@ function ProfilePage() {
       <Header />
 
       <main className="profile__main">
+
         <h1 className="profile__title">Your Hiking Profile</h1>
         <p className="profile__subtitle">Insights from your adventures, synced from your device.</p>
 
