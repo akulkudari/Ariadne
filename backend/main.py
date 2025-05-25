@@ -1,5 +1,6 @@
 import time
-from fastapi import FastAPI, HTTPException, Request, Form
+import traceback
+from fastapi import FastAPI, HTTPException, Request, Form, Cookie
 from fastapi.responses import FileResponse, RedirectResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from mysql.connector import Error
@@ -30,7 +31,7 @@ pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 logger = logging.getLogger(__name__)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # React dev server
+    allow_origins=["http://localhost:3000"],  # must match frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -125,9 +126,8 @@ async def register_user(data: RegisterData):
 
     finally:
         cursor.close()
-        conn.close()
-            
-        
+        conn.close()            
+
 @app.get("/login", response_class=FileResponse)
 def login_page():
     return FileResponse("frontend/src/login.js")
@@ -164,10 +164,16 @@ async def userlogin(request: Request, creds: LoginData):
         if not session:
              response = RedirectResponse(url=f"/login", status_code=302)
              return response
-        response = RedirectResponse(url=f"/dashboard", status_code=302)
-        response.set_cookie(key="sessionId", value=session_id, httponly=True, max_age=3600)
-        return JSONResponse({"status": "ok"})
-       
+        response = JSONResponse({"status": "ok"})
+        response.set_cookie(
+            key="sessionId",
+            value=session_id,
+            httponly=True,
+            max_age=3600,
+            samesite="Lax",  # or "None" + secure if cross-site
+            secure=False # True in production (with HTTPS)
+        )
+        return response    
     except Error as e:
         import traceback
         error_details = traceback.format_exc()
@@ -178,31 +184,26 @@ async def userlogin(request: Request, creds: LoginData):
         cursor.close()
         conn.close()
 
-@app.get("/cookie")
-async def getCookie(request: Request):
-    sessionID = request.cookies.get("sessionId")  # Match the actual cookie key
-    if not sessionID:
-        raise HTTPException(status_code=400, detail="No active session found")
-    
-    return JSONResponse(content={"sessionId": sessionID})
+
 @app.delete("/login")
-async def logout(request: Request):
-    sessionId = request.cookies.get("sessionId")
-    if not sessionId:
-        raise HTTPException(status_code=400, detail="No active session found")
-
+async def logout(sessionId: str = Cookie(None)):
     try:
-        # Use your existing database method
-        success = await db.delete_session(sessionId)
-        if not success:
-            raise HTTPException(status_code=500, detail="Failed to delete session")
-
-        # Clear session cookie and redirect to login page
-        response = RedirectResponse(url="/login", status_code=302)
+        if not sessionId:
+            raise HTTPException(status_code=400, detail="No session found")
+        print(sessionId)
+        await db.delete_session(sessionId)
+        response = JSONResponse({"status": "logged out"})
+        response.delete_cookie(key="sessionId")
         return response
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Logout failed: {e}")
 
+    except HTTPException:
+        # re-raise HTTP errors so FastAPI can handle them properly
+        raise
+
+    except Exception:
+        error_details = traceback.format_exc()
+        print("Logout Error:", error_details)
+        raise HTTPException(status_code=500, detail="An error occurred during logout.")
 @app.get("/dashboard", response_class=FileResponse)
 def dashboard_page():
     return FileResponse("frontend/src/index.js")  # or your built index.html

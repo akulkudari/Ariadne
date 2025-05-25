@@ -14,9 +14,9 @@ export default function Login({ onLoggedIn }) {
       const res = await fetch('http://localhost:9000/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // <-- Add this line
         body: JSON.stringify({ email, password }),
       });
-
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.detail || 'Invalid email or password');

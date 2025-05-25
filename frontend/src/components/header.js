@@ -8,7 +8,8 @@ function Header() {
     async function handleLogout() {
       try {
         const response = await fetch('http://localhost:9000/login', {
-          method: 'DELETE',  // important to send cookies
+          method: 'DELETE',
+          credentials: 'include'
         });
   
         if (response.redirected) {
@@ -30,6 +31,7 @@ function Header() {
     <header className="dashboard__header">
       <div className="dashboard__logo">Ariadne</div>
       <nav className="dashboard__nav">
+        <a classname = "dashboard_nav-link"> Username: </a>
         <a href="/dashboard" className="dashboard__nav-link">Home</a>
         <a href="/health" className="dashboard__nav-link">Health Tracker</a>
         <a href="/nav" className="dashboard__nav-link">Navigation</a>
