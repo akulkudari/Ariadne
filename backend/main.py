@@ -43,35 +43,35 @@ async def startup_event():
     time.sleep(20)
     init_db()
 
-async def authenticate_user(request: Request):
-    session_id = request.cookies.get("sessionId")
-    if not session_id:
-        raise HTTPException(status_code=401, detail="Unauthorized: No session ID provided")
+@app.get("/user_auth")
+async def authenticate_user(sessionId: str = Cookie(None)):
     
+    if not sessionId:
+        return RedirectResponse(url="/", status_code=302)
+    print(sessionId)
     conn = db.get_db_connection()
     if conn is None:
-        raise HTTPException(status_code=500, detail="Database connection error")  
+        raise HTTPException(status_code=500, detail="Database connection error")
 
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT user_id FROM sessions WHERE id = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM sessions WHERE id = %s", (sessionId,))
         valid_session = cursor.fetchone()
-
         if not valid_session:
-            return None  # Instead of raising HTTPException, return None for handling
-
-        user_id = valid_session[0]  # Extract the user_id from the result
-        print(user_id)
-        user = await db.get_user_by_id(user_id)  # Ensure this is async; otherwise, remove 'await'
+            return RedirectResponse(url="/", status_code=302)
+        
+        user_id = valid_session[0]
+        user = await db.get_user_by_id(user_id)  # Make sure this is async if implemented that way
         
         if not user:
-            return None  # No valid user found
-        
+            return RedirectResponse(url="/", status_code=302)
+
         return user_id  # Return authenticated user_id
 
     finally:
         cursor.close()
         conn.close()
+
 
 
 @app.get("/", response_class=FileResponse)
@@ -204,6 +204,32 @@ async def logout(sessionId: str = Cookie(None)):
         error_details = traceback.format_exc()
         print("Logout Error:", error_details)
         raise HTTPException(status_code=500, detail="An error occurred during logout.")
+    
+@app.get("/community_posts")
+async def get_community_posts():
+    conn = db.get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Database connection error")
+    
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT user_name, message, created_at 
+            FROM community_posts 
+            ORDER BY created_at DESC
+        """)
+        posts = cursor.fetchall()
+        return JSONResponse(content={"posts": posts})
+    
+    except Exception as e:
+        import traceback
+        print("Error fetching community posts:", traceback.format_exc())
+        raise HTTPException(status_code=500, detail="Failed to fetch community posts")
+    
+    finally:
+        cursor.close()
+        conn.close()
+
 @app.get("/dashboard", response_class=FileResponse)
 def dashboard_page():
     return FileResponse("frontend/src/index.js")  # or your built index.html

@@ -48,12 +48,13 @@ def init_db():
         """)
         # sessions table
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS sessions (
-                id VARCHAR(36) PRIMARY KEY,
-                user_id INT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-            );
+                CREATE TABLE IF NOT EXISTS sessions (
+                    id VARCHAR(36) PRIMARY KEY,
+                    user_id INT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    expires_at TIMESTAMP NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                );
         """)
         #devices table
         cursor.execute("""
@@ -76,6 +77,15 @@ def init_db():
             );
         """)
         #health_data table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS community_posts (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_name VARCHAR(255) NOT NULL,
+                message TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_name) REFERENCES users(username) ON DELETE CASCADE
+            );
+        """)
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS health_data (
@@ -115,38 +125,6 @@ async def get_user_by_email(email: str) -> Optional[dict]:
         if connection and connection.is_connected():
             connection.close()
 
-def create_tables():
-   """Creates tables for storing sensor data."""
-   queries = {
-       "temperature": """
-           CREATE TABLE IF NOT EXISTS temperature (
-               id INT AUTO_INCREMENT PRIMARY KEY,
-               value FLOAT NOT NULL,
-               unit VARCHAR(10) NOT NULL,
-               mac_address VARCHAR(255) NOT NULL,
-               timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-           );
-       """,
-       "humidity": """
-           CREATE TABLE IF NOT EXISTS humidity (
-               id INT AUTO_INCREMENT PRIMARY KEY,
-               value FLOAT NOT NULL,
-               unit VARCHAR(10) NOT NULL,
-               mac_address VARCHAR(255) NOT NULL,
-               timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-           );
-       """,
-       "light": """
-           CREATE TABLE IF NOT EXISTS light (
-               id INT AUTO_INCREMENT PRIMARY KEY,
-               value FLOAT NOT NULL,
-               unit VARCHAR(10) NOT NULL,
-               mac_address VARCHAR(255) NOT NULL,
-               timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-           );
-       """,
-   }
-
 async def get_user_by_id(user_id: int) -> Optional[dict]:
     """
     Retrieve user from database by ID.
@@ -164,6 +142,34 @@ async def get_user_by_id(user_id: int) -> Optional[dict]:
         cursor = connection.cursor(dictionary=True)
         cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
         return cursor.fetchone()
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+async def get_user_by_session(session_id: str):
+    """Return user details for a given session ID."""
+    connection = None
+    cursor = None
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # Join sessions and users to retrieve user info from the session ID
+        cursor.execute("""
+            SELECT users.id, users.email, users.username
+            FROM sessions
+            JOIN users ON sessions.user_id = users.id
+            WHERE sessions.id = %s
+        """, (session_id,))
+        
+        user = cursor.fetchone()
+        return user  # Will be None if not found
+    except Exception:
+        import traceback
+        print("get_user_by_session Error:", traceback.format_exc())
+        return None
     finally:
         if cursor:
             cursor.close()

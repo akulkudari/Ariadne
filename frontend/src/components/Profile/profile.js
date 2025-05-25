@@ -1,11 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import './profile.css';
 import { useNavigate } from 'react-router-dom';
-import Header from '../header'
+import './profile.css';
+import Header from '../Header/header'
 
 
 
 function ProfilePage() {
+  const navigate = useNavigate();
+    useEffect(() => {
+      fetch("http://localhost:9000/user_auth", {
+        method: "GET",
+        credentials: "include", // <-- Ensures cookies are sent
+      })
+        .then((res) => {
+          if (res.redirected) {
+            // FastAPI redirect was triggered (user not authenticated)
+            navigate("/");
+          }
+          return res.json();
+        })
+        .catch((err) => {
+          console.error("Auth check failed", err);
+          navigate("/"); // fallback to redirect on error
+        });
+    }, [navigate]);
+  
   const [hikeStats, setHikeStats] = useState({
     numberOfHikes: 12,
     longestHike: '8.4 miles',
@@ -16,8 +35,6 @@ function ProfilePage() {
   useEffect(() => {
     console.log("Smartwatch data sync initialized...");
   }, []);
-
-  const navigate = useNavigate();
 
     function handleLogout() {
     // Clear user session if needed (e.g., localStorage.clear())

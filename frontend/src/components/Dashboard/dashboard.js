@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './dashboard.css';
 import communityImg from '../../assets/images/community.jpg';
 import navigationImg from '../../assets/images/navigation.png';
 import healthImg from '../../assets/images/health.png';
-import Header from '../header'
+import Header from '../Header/header'
 
 // you can replace these with real icons or <img> tags
 const cards = [
@@ -29,6 +30,26 @@ const cards = [
 ];
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    fetch("http://localhost:9000/user_auth", {
+      method: "GET",
+      credentials: "include", // <-- Ensures cookies are sent
+    })
+      .then((res) => {
+        if (res.redirected) {
+          // FastAPI redirect was triggered (user not authenticated)
+          navigate("/");
+        }
+        return res.json();
+      })
+      .catch((err) => {
+        console.error("Auth check failed", err);
+        navigate("/"); // fallback to redirect on error
+      });
+  }, [navigate]);
+
+
   return (
     <div className="dashboard">
       <Header />

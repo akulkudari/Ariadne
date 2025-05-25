@@ -1,15 +1,36 @@
 // src/components/MapGlobe.js
 import React, { useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import mapboxgl from 'mapbox-gl';
 import MapboxDirections from '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions';
 import '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './navboard.css';
-import Header from '../header'
+import Header from '../Header/header'
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWt1ZGFyaSIsImEiOiJjbWFvam5tM3owNjgxMmtvOHZpYzNlbWdwIn0.hx9QD3NKieHATfs_btT-bw';
 
 export default function NavBoard() {
+
+  const navigate = useNavigate();
+    useEffect(() => {
+      fetch("http://localhost:9000/user_auth", {
+        method: "GET",
+        credentials: "include", // <-- Ensures cookies are sent
+      })
+        .then((res) => {
+          if (res.redirected) {
+            // FastAPI redirect was triggered (user not authenticated)
+            navigate("/");
+          }
+          return res.json();
+        })
+        .catch((err) => {
+          console.error("Auth check failed", err);
+          navigate("/"); // fallback to redirect on error
+        });
+    }, [navigate]);
+  
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
   const spinEnabled = true;
