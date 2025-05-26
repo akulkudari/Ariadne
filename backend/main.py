@@ -1,4 +1,5 @@
 import time
+import datetime
 import traceback
 from fastapi import FastAPI, HTTPException, Request, Form, Cookie
 from fastapi.responses import FileResponse, RedirectResponse, JSONResponse
@@ -15,6 +16,9 @@ from pydantic import BaseModel, EmailStr
 class LoginData(BaseModel):
     email: EmailStr
     password: str
+
+class CommunityPost(BaseModel):
+    message: str
 
 class RegisterData(BaseModel):
     email: EmailStr
@@ -184,7 +188,6 @@ async def userlogin(request: Request, creds: LoginData):
         cursor.close()
         conn.close()
 
-
 @app.delete("/login")
 async def logout(sessionId: str = Cookie(None)):
     try:
@@ -205,27 +208,85 @@ async def logout(sessionId: str = Cookie(None)):
         print("Logout Error:", error_details)
         raise HTTPException(status_code=500, detail="An error occurred during logout.")
     
+
+
+@app.post("/community")
+async def add_community_post(
+    request: Request,
+    sessionId: str = Cookie(None)
+):
+    if not sessionId:
+        raise HTTPException(status_code=401, detail="Unauthorized: No session ID")
+
+    # Parse raw JSON body
+    try:
+        body = await request.json()
+        message = body.get("message", "").strip()
+        if not message:
+            raise HTTPException(status_code=400, detail="Message cannot be empty")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid request body")
+
+    # DB connection
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection error")
+
+    try:
+        cursor = conn.cursor()
+
+        # Validate session
+        cursor.execute("SELECT user_id, expires_at FROM sessions WHERE id = %s", (sessionId,))
+        session = cursor.fetchone()
+        if not session:
+            raise HTTPException(status_code=401, detail="Invalid session")
+
+        user_id, expires_at = session
+        if datetime.datetime.utcnow() > expires_at:
+            raise HTTPException(status_code=401, detail="Session expired")
+
+        # Get username
+        cursor.execute("SELECT username FROM users WHERE id = %s", (user_id,))
+        user = cursor.fetchone()
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+
+        username = user[0]
+
+        # Insert post
+        cursor.execute(
+            "INSERT INTO community_posts (user_name, message) VALUES (%s, %s)",
+            (username, message)
+        )
+        conn.commit()
+
+        return {"status": "success", "message": "Post added"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating post: {str(e)}")
+
+    finally:
+        cursor.close()
+        conn.close()
+
 @app.get("/community_posts")
 async def get_community_posts():
-    conn = db.get_db_connection()
-    if conn is None:
+    conn = get_db_connection()
+    if not conn:
         raise HTTPException(status_code=500, detail="Database connection error")
-    
     try:
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True)  # Ensures we get dict rows, good for JSON
         cursor.execute("""
             SELECT user_name, message, created_at 
             FROM community_posts 
-            ORDER BY created_at DESC
+            ORDER BY created_at DESC;
         """)
         posts = cursor.fetchall()
-        return JSONResponse(content={"posts": posts})
-    
+        return JSONResponse(content=posts)
+
     except Exception as e:
-        import traceback
-        print("Error fetching community posts:", traceback.format_exc())
-        raise HTTPException(status_code=500, detail="Failed to fetch community posts")
-    
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve posts: {str(e)}")
+
     finally:
         cursor.close()
         conn.close()

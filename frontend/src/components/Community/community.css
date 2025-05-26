@@ -6,6 +6,29 @@
     color: #333;
   }
   
+  .community__form {
+    margin: 1rem 0;
+  }
+  
+  .community__textarea {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    resize: vertical;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+  }
+  
+  .community__submit {
+    margin-top: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
   .community__header {
     display: flex;
     justify-content: space-between;
