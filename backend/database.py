@@ -7,6 +7,8 @@ from typing import Optional
 import pandas as pd
 import time
 import logging
+from datetime import datetime, timedelta
+
 
 
 load_dotenv()
@@ -183,8 +185,10 @@ async def create_session(user_id: int, session_id: str) -> bool:
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
+        expiry = datetime.utcnow() + timedelta(hours=1)
         cursor.execute(
-            "INSERT INTO sessions (id, user_id) VALUES (%s, %s)", (session_id, user_id)
+            "INSERT INTO sessions (id, user_id, expires_at) VALUES (%s, %s, %s)",
+            (session_id, user_id, expiry)
         )
         connection.commit()
         return True
