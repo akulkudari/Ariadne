@@ -238,15 +238,12 @@ async def add_community_post(
         cursor = conn.cursor()
 
         # Validate session
-        cursor.execute("SELECT user_id, expires_at FROM sessions WHERE id = %s", (sessionId,))
+        cursor.execute("SELECT user_id FROM sessions WHERE id = %s", (sessionId,))
         session = cursor.fetchone()
         if not session:
             raise HTTPException(status_code=401, detail="Invalid session")
 
-        user_id, expires_at = session
-        if datetime.datetime.utcnow() > expires_at:
-            raise HTTPException(status_code=401, detail="Session expired")
-
+        user_id = session[0]
         # Get username
         cursor.execute("SELECT username FROM users WHERE id = %s", (user_id,))
         user = cursor.fetchone()

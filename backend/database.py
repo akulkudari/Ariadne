@@ -54,7 +54,6 @@ def init_db():
                     id VARCHAR(36) PRIMARY KEY,
                     user_id INT NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    expires_at TIMESTAMP NOT NULL,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
         """)
@@ -185,10 +184,9 @@ async def create_session(user_id: int, session_id: str) -> bool:
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
-        expiry = datetime.utcnow() + timedelta(hours=1)
         cursor.execute(
-            "INSERT INTO sessions (id, user_id, expires_at) VALUES (%s, %s, %s)",
-            (session_id, user_id, expiry)
+            "INSERT INTO sessions (id, user_id) VALUES (%s, %s)",
+            (session_id, user_id)
         )
         connection.commit()
         return True

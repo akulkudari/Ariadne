@@ -79,15 +79,17 @@ export default function Community() {
         </p>
 
         <form className="community__form" onSubmit={handleSubmit}>
-          <textarea
-            className="community__textarea"
-            placeholder="Write your post..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            rows="4"
-            required
-          />
-          <button type="submit" className="community__submit">Post</button>
+          <div className="community__form-inner">
+            <textarea
+              className="community__textarea"
+              placeholder="Write your post..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows="4"
+              required
+            />
+            <button type="submit" className="community__submit">Post</button>
+          </div>
         </form>
 
         <div className="community__posts">

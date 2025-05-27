@@ -29,6 +29,25 @@
     cursor: pointer;
   }
 
+  .community__form-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .community__textarea {
+    width: 60%; /* Reduce width from full-page */
+    max-width: 600px;
+    min-width: 300px;
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    resize: vertical;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+  }
+  
   .community__submit {
     width: 10%;
     padding: 0.75rem;
