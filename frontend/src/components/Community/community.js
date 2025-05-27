@@ -6,6 +6,21 @@ import Header from '../Header/header';
 export default function Community() {
   const navigate = useNavigate();
   const [message, setMessage] = useState("");
+  const [posts, setPosts] = useState([]); 
+
+  const fetchPosts = async () => {
+    try {
+      const res = await fetch("http://localhost:9000/community_posts", {
+        method: "GET",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to load posts");
+      const data = await res.json();
+      setPosts(data);
+    } catch (err) {
+      console.error("Error fetching posts:", err);
+    }
+  };
 
   useEffect(() => {
     fetch("http://localhost:9000/user_auth", {
@@ -18,6 +33,7 @@ export default function Community() {
         }
         return res.json();
       })
+      .then(() => fetchPosts())
       .catch((err) => {
         console.error("Auth check failed", err);
         navigate("/");
@@ -41,6 +57,7 @@ export default function Community() {
       if (res.ok) {
         setMessage("");
         alert("Post submitted successfully!");
+        await fetchPosts();    
       } else {
         const err = await res.json();
         alert("Error posting: " + err.detail);
@@ -72,6 +89,22 @@ export default function Community() {
           />
           <button type="submit" className="community__submit">Post</button>
         </form>
+
+        <div className="community__posts">
+          {posts.map((post) => (
+            <div key={post.id} className="community__post">
+              <div className="community__post-user">
+                {post.user_name}
+              </div>
+              <div className="community__post-content">
+                {post.message}
+              </div>
+              <div className="community__post-time">
+                {new Date(post.created_at).toLocaleString()}
+              </div>
+            </div>
+          ))}
+        </div>
       </main>
 
       <footer className="dashboard__footer">

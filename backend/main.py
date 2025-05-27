@@ -11,6 +11,8 @@ import backend.database as db
 from backend.database import init_db, get_db_connection
 from .database import init_db
 from pydantic import BaseModel, EmailStr
+from fastapi.encoders import jsonable_encoder
+
 
 
 class LoginData(BaseModel):
@@ -275,18 +277,23 @@ async def get_community_posts():
     if not conn:
         raise HTTPException(status_code=500, detail="Database connection error")
     try:
-        cursor = conn.cursor(dictionary=True)  # Ensures we get dict rows, good for JSON
+        cursor = conn.cursor(dictionary=True)
         cursor.execute("""
-            SELECT user_name, message, created_at 
+            SELECT id, user_name, message, created_at 
             FROM community_posts 
             ORDER BY created_at DESC;
         """)
         posts = cursor.fetchall()
-        return JSONResponse(content=posts)
+
+        # optional: turn created_at into ISO strings
+        for p in posts:
+            p["created_at"] = p["created_at"].isoformat()
+
+        # *** key change here ***
+        return JSONResponse(content=jsonable_encoder(posts))
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve posts: {str(e)}")
-
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve posts: {e}")
     finally:
         cursor.close()
         conn.close()
