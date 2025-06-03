@@ -15,6 +15,15 @@ from fastapi.encoders import jsonable_encoder
 
 
 
+
+class HealthData(BaseModel):
+    device_mac: str
+    heart_rate: int
+
+class DeviceIn(BaseModel):
+    name: str
+    mac: str
+
 class LoginData(BaseModel):
     email: EmailStr
     password: str
@@ -28,6 +37,13 @@ class RegisterData(BaseModel):
     password: str
     password_confirm: str
     deviceId: str
+
+class DeviceOut(BaseModel):
+    id: int
+    user_id: int
+    name: str
+    mac: str
+    registered_at: str  # or datetime if you parse it accordingly
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -48,6 +64,32 @@ app.add_middleware(
 async def startup_event():
     time.sleep(20)
     init_db()
+
+async def get_authenticated_user_id(sessionId: str = Cookie(None)) -> int:
+    if not sessionId:
+        raise HTTPException(status_code=401, detail="Session ID missing")
+
+    conn = db.get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Database connection error")
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT user_id FROM sessions WHERE id = %s", (sessionId,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=401, detail="Invalid session")
+
+        user_id = row[0]
+
+        user = await db.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+
+        return user_id
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.get("/user_auth")
 async def authenticate_user(sessionId: str = Cookie(None)):
@@ -77,6 +119,7 @@ async def authenticate_user(sessionId: str = Cookie(None)):
     finally:
         cursor.close()
         conn.close()
+
 
 
 
@@ -209,7 +252,136 @@ async def logout(sessionId: str = Cookie(None)):
         error_details = traceback.format_exc()
         print("Logout Error:", error_details)
         raise HTTPException(status_code=500, detail="An error occurred during logout.")
+
+
+
+@app.post("/devices")
+async def add_device(device: DeviceIn, sessionId: str = Cookie(None)):
+    if not sessionId:
+        raise HTTPException(status_code=401, detail="Session ID missing")
+
+    try:
+        print(sessionId)
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        print("this part works")
+        user_id = await get_authenticated_user_id(sessionId)
+        # Step 1: Look up user_id from sessions table using sessionId
+        # Step 2: Insert device with the correct user_id
+        cursor.execute(
+            """
+            INSERT INTO devices (user_id, name, mac)
+            VALUES (%s, %s, %s)
+            """,
+            (user_id, device.name, device.mac)
+        )
+        conn.commit()
+        conn.close()
+
+        return {"message": "Device added successfully."}
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"detail": f"Error adding device: {str(e)}"})
     
+@app.put("/devices/{device_id}")
+async def update_device(
+    device_id: int,
+    device: DeviceIn,
+    sessionId: str = Cookie(None)
+):
+    if not sessionId:
+         raise HTTPException(status_code=401, detail="Session ID missing")
+
+    try:
+         user_id = await get_authenticated_user_id(sessionId)
+         conn = get_db_connection()
+         cursor = conn.cursor()
+         cursor.execute(
+            "SELECT id FROM devices WHERE id = %s AND user_id = %s",
+            (device_id, user_id)
+        )
+         existing = cursor.fetchone()
+         if not existing:
+            raise HTTPException(status_code=404, detail="Device not found or access denied")
+         
+         cursor.execute(
+            """
+            UPDATE devices
+            SET name = %s, mac = %s
+            WHERE id = %s AND user_id = %s
+            """,
+            (device.name, device.mac, device_id, user_id)
+        )
+         conn.commit()
+         cursor.close()
+         conn.close()
+         return {"message": f"Updated device {device_id}, {device.name}, {device.mac}"}
+
+    except Exception as e:
+         return JSONResponse(status_code=500, content={"detail": f"Error updating device: {str(e)}"})
+    # Your update logic
+    
+@app.get("/devices")
+async def get_devices(sessionId: str = Cookie(None)):
+    user_id = await get_authenticated_user_id(sessionId)
+    print(user_id)
+    conn = db.get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Database connection error")
+    
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, user_id, name, mac, registered_at FROM devices WHERE user_id = %s",
+            (user_id,)
+        )
+        rows = cursor.fetchall()
+
+        devices = []
+        for row in rows:
+            devices.append({
+                "id": row[0],
+                "user_id": row[1],
+                "name": row[2],
+                "mac": row[3],
+                "registered_at": row[4].strftime("%Y-%m-%d %H:%M:%S") if row[4] else None
+            })
+
+        return devices
+
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.get("/devices/{user_id}")
+def get_devices_by_user(user_id: int):
+    conn = db.get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Database connection error")
+    
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, user_id, name, mac, registered_at FROM devices WHERE user_id = %s",
+            (user_id,)
+        )
+        rows = cursor.fetchall()
+
+        devices = []
+        for row in rows:
+            devices.append({
+                "id": row[0],
+                "user_id": row[1],
+                "name": row[2],
+                "mac": row[3],
+                "registered_at": row[4].strftime("%Y-%m-%d %H:%M:%S") if row[4] else None
+            })
+
+        return devices
+
+    finally:
+        cursor.close()
+        conn.close()
 
 
 @app.post("/community")
@@ -268,6 +440,59 @@ async def add_community_post(
         cursor.close()
         conn.close()
 
+@app.get("/health_data")
+async def get_health_data(sessionId: str = Cookie(None)):
+    if not sessionId:
+        raise HTTPException(status_code=401, detail="Session ID missing")
+
+    user_id = await get_authenticated_user_id(sessionId)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Get device MACs owned by user
+        cursor.execute("SELECT mac FROM devices WHERE user_id = %s", (user_id,))
+        macs = [row[0] for row in cursor.fetchall()]
+        if not macs:
+            return []
+
+        # Use SQL IN clause for mac addresses
+        format_strings = ','.join(['%s'] * len(macs))
+        cursor.execute(f"""
+            SELECT device_mac, heart_rate, recorded_at
+            FROM health_data
+            WHERE device_mac IN ({format_strings})
+            ORDER BY recorded_at ASC
+        """, tuple(macs))
+
+        rows = cursor.fetchall()
+        result = [
+            {"device_mac": r[0], "heart_rate": r[1], "timestamp": r[2].strftime("%Y-%m-%d %H:%M:%S")}
+            for r in rows
+        ]
+        return result
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.post("/health")
+def add_heart_rate(data: HealthData):
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection error")
+
+    try:
+        cursor = conn.cursor()
+        sql = """
+            INSERT INTO health_data (device_mac, heart_rate)
+            VALUES (%s, %s)
+        """
+        cursor.execute(sql, (data.device_mac, data.heart_rate))
+        conn.commit()
+        return {"message": "Heart rate added successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error adding health data: {str(e)}")
+
 @app.get("/community_posts")
 async def get_community_posts():
     conn = get_db_connection()
@@ -297,4 +522,4 @@ async def get_community_posts():
 
 @app.get("/dashboard", response_class=FileResponse)
 def dashboard_page():
-    return FileResponse("frontend/src/index.js")  # or your built index.html
+    return FileResponse("frontend/src/index.js")  # or your built index.htmluvicorn main:app --host 0.0.0.0 --port 9000

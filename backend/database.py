@@ -43,7 +43,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(255) NOT NULL UNIQUE,
-                email    VARCHAR(255) NOT NULL UNIQUE,
+                email VARCHAR(255) NOT NULL UNIQUE,
                 password_hash VARCHAR(255) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
@@ -63,7 +63,9 @@ def init_db():
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 user_id INT,
                 name VARCHAR(255),
-                registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                mac VARCHAR(36) UNIQUE,
+                registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
         """)
         #location_data table
@@ -91,12 +93,9 @@ def init_db():
             """
             CREATE TABLE IF NOT EXISTS health_data (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                device_id INT NOT NULL,
+                device_mac VARCHAR(36),
                 heart_rate INT,
-                body_temp FLOAT,
-                spo2 INT,
-                recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (device_id) REFERENCES devices(id)
+                recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             """
         )

@@ -107,8 +107,46 @@
     text-decoration: underline;
     transition: opacity 0.2s;
   }
+
+  .device-form {
+    margin-top: 20px;
+    max-width: 400px;
+  }
+  
+  .device-form__group {
+    margin-bottom: 10px;
+  }
+  
+  .device-form__group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .device-form__group input {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+  }
+  
+  .device-form__message {
+    margin-top: 10px;
+    color: green;
+  }
   
   .dashboard__logout-button:hover {
     opacity: 0.8;
   }
   
+  .device-list {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 10px;
+  }
+  
+  .device-list__item {
+    background-color: #f5f5f5;
+    margin-bottom: 8px;
+    padding: 10px;
+    border-radius: 8px;
+  }
