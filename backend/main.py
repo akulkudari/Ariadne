@@ -36,7 +36,6 @@ class RegisterData(BaseModel):
     username: str
     password: str
     password_confirm: str
-    deviceId: str
 
 class DeviceOut(BaseModel):
     id: int
@@ -138,7 +137,7 @@ async def register_user(data: RegisterData):
     username = data.username
     password = data.password
     password_confirm = data.password_confirm
-    deviceId = data.deviceId
+    # deviceId = data.deviceId
     conn = db.get_db_connection()
     if conn is None:
         raise HTTPException(status_code=500, detail="Database connection error")

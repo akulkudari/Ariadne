@@ -1,152 +1,218 @@
 .profile {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    font-family: 'Inter', sans-serif;
-    color: #333;
-  }
-  
-  .profile__logo {
-    font-size: 1.25rem;
-    font-weight: 600;
-  }
-  
-  .profile__nav {
-    display: flex;
-    gap: 1.5rem;
-  }
-  
-  .profile__nav-link {
-    color: white;
-    text-decoration: none;
-    font-weight: 500;
-    transition: opacity 0.2s;
-  }
-  
-  .profile__nav-link:hover {
-    opacity: 0.8;
-  }
-  
-  .profile__main {
-    flex: 1;
-    text-align: center;
-    padding: 2rem 1rem;
-  }
-  
-  .profile__title {
-    font-size: 3.5rem;
-    margin-bottom: 0.5rem;
-    color: #247028;
-  }
-  
-  .profile__subtitle {
-    font-size: 1rem;
-    margin-bottom: 2rem;
-    color: #555;
-  }
-  
-  .profile__cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 2rem;
-    max-width: 1100px;
-    margin: 0 auto 2rem;
-  }
-  
-  .profile__card {
-    background-color: #e2efe2;
-    border-radius: 1rem;
-    padding: 1.5rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  
-  .profile__card-title {
-    font-size: 1.25rem;
-    margin-bottom: 0.5rem;
-    color: #2e7d32;
-  }
-  
-  .profile__card-value {
-    font-size: 1.8rem;
-    font-weight: bold;
-    color: #134d18;
-  }
-  
-  .profile__section {
-    margin: 2rem auto;
-    max-width: 800px;
-    text-align: center;
-  }
-  
-  .profile__button {
-    margin-top: 1rem;
-    padding: 0.75rem 1.5rem;
-    background-color: #388e3c;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .profile__button:hover {
-    background-color: #2e7d32;
-  }
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  color: #333;
+}
+
+.profile__main {
+  flex: 1;
+  padding: 2rem 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: left;  
+}
+
+.profile__title {
+  font-size: 2.75rem;
+  margin-bottom: 0.25rem;
+  color: #247028;
+}
+
+.profile__subtitle {
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  color: #555;
+}
+
+.profile__content {
+  display: flex;
+  gap: 2rem;
+}
+
+.profile__left {
+  flex: 2.5; 
+  padding-right: 80px;
+}
+
+.profile__right {
+  flex: 1.5;  
+}
+
+.profile__header {
+  display: flex;
+  align-items: flex-start;  
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.profile__avatar {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #388e3c;
+}
+
+.profile__bio {
+  max-width: 600px;
+  text-align: left;
+  color: #555;
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.profile__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.profile__card {
+  background-color: #e2efe2;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.profile__card-title {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: #2e7d32;
+}
+
+.profile__card-value {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #134d18;
+}
+
+.profile__device-tabs {
+  display: flex;
+  justify-content: flex-start; 
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.tab-button {
+  padding: 0.5rem 1.25rem;
+  background-color: #e2efe2;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #2e7d32;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.tab-button--active {
+  background-color: white;
+  border-color: #388e3c;
+  color: #388e3c;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 
 
-  .dashboard__logout-button {
-    background: none;
-    border: none;
-    color: white;
-    font-weight: 500;
-    font-size: 1rem;
-    cursor: pointer;
-    padding: 0;
-    margin-left: 0.5rem;
-    text-decoration: underline;
-    transition: opacity 0.2s;
-  }
+.profile__section {
+  margin-top: 1rem;
+}
 
-  .device-form {
-    margin-top: 20px;
-    max-width: 400px;
-  }
-  
-  .device-form__group {
-    margin-bottom: 10px;
-  }
-  
-  .device-form__group label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 5px;
-  }
-  
-  .device-form__group input {
-    width: 100%;
-    padding: 8px;
-    box-sizing: border-box;
-  }
-  
-  .device-form__message {
-    margin-top: 10px;
-    color: green;
-  }
-  
-  .dashboard__logout-button:hover {
-    opacity: 0.8;
-  }
-  
-  .device-list {
-    list-style: none;
-    padding-left: 0;
-    margin-top: 10px;
-  }
-  
-  .device-list__item {
-    background-color: #f5f5f5;
-    margin-bottom: 8px;
-    padding: 10px;
-    border-radius: 8px;
-  }
+.profile__section h2 {
+  margin-bottom: 1.5rem;
+  color: #247028;
+}
+
+.device-form {
+  margin: 0;       
+  width: 100%; 
+  text-align: left;
+}
+
+.device-form__group {
+  margin-bottom: 1.2rem;
+}
+
+.device-form__group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.device-form__group input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.device-form__message {
+  margin-top: 0.75rem;
+  color: green;
+}
+
+/* Device list styling */
+.device-list {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 1rem;
+}
+
+.device-list__item {
+  background-color: #f5f5f5;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.edit-device-form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.edit-device-form input {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  flex: 1 1 120px;
+  box-sizing: border-box;
+}
+
+.profile__button {
+  padding: 0.6rem 1.25rem;
+  background-color: #388e3c;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 0.5rem;
+}
+
+.profile__button:hover {
+  background-color: #2e7d32;
+}
+
+.profile__button--small {
+  padding: 0.4rem 1rem;
+  font-size: 0.9rem;
+}
+
+.profile__button--secondary {
+  background-color: #ccc;
+  color: #333;
+  margin-left: 0.5rem;
+}
+
+.profile__button--secondary:hover {
+  background-color: #bbb;
+}

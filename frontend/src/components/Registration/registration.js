@@ -7,7 +7,6 @@ export default function RegistrationPage({ onRegistered }) {
     username: '',
     password: '',
     password_confirm: '',
-    deviceId: ''
   });
   const [error, setError] = useState('');
 
@@ -93,17 +92,7 @@ export default function RegistrationPage({ onRegistered }) {
             />
           </label>
 
-          <label>
-            Device ID
-            <input
-              type="text"
-              name="deviceId"
-              value={form.deviceId}
-              onChange={handleChange}
-              required
-              className="form-input"
-            />
-          </label>
+  
 
           <button type="submit" className="btn btn-reg-button">
             Register
