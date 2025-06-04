@@ -12,8 +12,8 @@ as an identifier.
 #include <ArduinoHttpClient.h>
 
 // WiFi credentials
-const char* ssid = "WHOISINPARIS";
-const char* password = "blackpeople";
+const char* ssid = "Wifiname";
+const char* password = "your-password";
 
 char macAddressStr[18]; // String to hold MAC address like "AA:BB:CC:DD:EE:FF"
 
