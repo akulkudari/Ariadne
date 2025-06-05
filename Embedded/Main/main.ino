@@ -6,9 +6,14 @@
 #include <Adafruit_BMP085.h>
 #include <TinyGPSPlus.h>
 
-// WiFi credentials
-const char* ssid = "WHOISINPARIS";
-const char* password = "blackpeople";
+// WiFi credentials (home network)
+const char* home_ssid = "WHOISINPARIS";
+const char* home_password = "blackpeople";
+
+//WiFi credentials (enterprise)
+const char* enterprise_ssid = "UCSD-PROTECTED";
+const char* enterprise_username = "akudari";   // usually your login
+const char* enterprise_password = "142399Triton!";   // your enterprise Wi-Fi password 
 char macAddressStr[18];
 
 const char* server = "192.168.1.20";
@@ -43,8 +48,18 @@ bool lastK2State = HIGH;
 bool lastK3State = HIGH;
 
 void connectToWiFi() {
+
+  /*
+  ==========FOR ENTERPRISE CONNECTION, UNCOMMENT THE CODE BELOW=====================
+  Serial.println("Connecting to WPA2-Enterprise WiFi");
+  WiFi.setEnterpriseUsername(enterprise_username);
+  WiFi.setEnterprisePassword(enterprise_password);
+  Wifi.begin(ssid)
+  */
+
   Serial.print("Connecting to WiFi");
-  WiFi.begin(ssid, password);
+  
+  WiFi.begin(home_ssid, home_password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
@@ -179,23 +194,56 @@ void loop() {
   }
   lastK2State = currentK2State;
 
-  // ---- K3 Press: Show location ----
-  bool currentK3State = digitalRead(buttonK3Pin);
-  if(currentK3State == LOW && lastK3State == HIGH){
-    Serial.println("K3 pressed - Location: ");
+  // ---- K3 Press: Show location and send waypoint ----
+bool currentK3State = digitalRead(buttonK3Pin);
+if (lastK3State == HIGH && currentK3State == LOW) {
+  Serial.println("K3 pressed - Location: ");
 
+  if (gps.location.isValid()) {
+    double latitude = gps.location.lat();
+    double longitude = gps.location.lng();
 
-    if (gps.location.isValid()) {
-      Serial.println("=== GPS Location ===");
-      Serial.print("Latitude: ");
-      Serial.println(gps.location.lat(), 6);
-      Serial.print("Longitude: ");
-      Serial.println(gps.location.lng(), 6);
-    } else {
-      Serial.println("Waiting for GPS fix...");
-    }
+    Serial.println("=== GPS Location ===");
+    Serial.print("Latitude: ");
+    Serial.println(latitude, 6);
+    Serial.print("Longitude: ");
+    Serial.println(longitude, 6);
 
+    // Send POST request to /waypoints
+    client.beginRequest();
+    client.post("/waypoint");  // or "/waypoint" depending on your actual route
+    client.sendHeader("Content-Type", "application/json");
+
+    String json = "{\"device_mac\":\"";
+    json += macAddressStr;
+    json += "\",\"latitude\":";
+    json += String(latitude, 6);
+    json += ",\"longitude\":";
+    json += String(longitude, 6);
+    json += "}";
+
+    client.sendHeader("Content-Length", json.length());
+    client.beginBody();
+    client.print(json);
+    client.endRequest();
+
+    int statusCode = client.responseStatusCode();
+    String response = client.responseBody();
+
+    Serial.print("Waypoint POST Status: ");
+    Serial.println(statusCode);
+    Serial.print("Response: ");
+    Serial.println(response);
+  } else {
+    Serial.println("Waiting for GPS fix...");
   }
+
+  // Wait for button to be released
+  while (digitalRead(buttonK3Pin) == LOW) {
+    delay(10); // Debounce delay
+  }
+}
+lastK3State = currentK3State;
 
   delay(20); // debounce
 }
