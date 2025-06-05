@@ -1,144 +1,201 @@
 #include <Wire.h>
+#include "MAX30105.h"
+#include "heartRate.h"
+#include <WiFi.h>
+#include <ArduinoHttpClient.h>
+#include <Adafruit_BMP085.h>
 #include <TinyGPSPlus.h>
-#include <LiquidCrystal_I2C.h>
 
-// === Devices ===
-const int MPU_ADDR = 0x68;
+// WiFi credentials
+const char* ssid = "WHOISINPARIS";
+const char* password = "blackpeople";
+char macAddressStr[18];
+
+const char* server = "192.168.1.20";
+const int port = 9000;
+WiFiClient wifi;
+HttpClient client = HttpClient(wifi, server, port);
+
+//GPS
+
 TinyGPSPlus gps;
-LiquidCrystal_I2C lcd(0x27, 16, 2);  // Adjust I2C address if needed
 
-String getUniqueID() {
-  uint32_t *ptr = (uint32_t*)0x0080A00C;  // Start address of unique ID
-  String uid = "";
-  for (int i = 0; i < 4; i++) {
-    uint32_t val = *(ptr + i);
-    uid += String(val, HEX);
+
+// Heart rate variables
+MAX30105 particleSensor;
+const byte RATE_SIZE = 4;
+byte rates[RATE_SIZE];
+byte rateSpot = 0;
+long lastBeat = 0;
+float beatsPerMinute = 0;
+int beatAvg = 0;
+
+// BMP180 sensor
+Adafruit_BMP085 bmp;
+float currentTemperature = 0.0;
+
+// Button pins
+const int buttonK1Pin = 3;
+const int buttonK2Pin = 2;
+const int buttonK3Pin = 4;
+bool lastK1State = HIGH;
+bool lastK2State = HIGH;
+bool lastK3State = HIGH;
+
+void connectToWiFi() {
+  Serial.print("Connecting to WiFi");
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
   }
-  return uid;
+  Serial.println("\nConnected to WiFi!");
+
+  uint8_t mac[6];
+  WiFi.macAddress(mac);
+  snprintf(macAddressStr, sizeof(macAddressStr), "%02X:%02X:%02X:%02X:%02X:%02X",
+           mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+  Serial.print("MAC Address: ");
+  Serial.println(macAddressStr);
 }
 
-// === Sensor Data ===
-int16_t accelerometer_x, accelerometer_y, accelerometer_z;
-int16_t gyro_x, gyro_y, gyro_z;
-int16_t temperature;
+void sendHeartRateToServer(float bpm, const char* mac) {
+  client.beginRequest();
+  client.post("/health");
+  client.sendHeader("Content-Type", "application/json");
 
-// === Previous Sensor Values ===
-int16_t prev_accel_x = 0, prev_accel_y = 0, prev_accel_z = 0;
-int16_t prev_gyro_x = 0, prev_gyro_y = 0, prev_gyro_z = 0;
+  String json = "{\"device_mac\":\"";
+  json += mac;
+  json += "\",\"heart_rate\":";
+  json += (int)bpm;
+  json += "}";
 
-// === Thresholds ===
-const int16_t ACCEL_THRESHOLD = 1000;
-const int16_t GYRO_THRESHOLD = 100;
+  client.sendHeader("Content-Length", json.length());
+  client.beginBody();
+  client.print(json);
+  client.endRequest();
 
-unsigned long lastUpdate = 0;
-const unsigned long updateInterval = 10000; // 10 seconds
+  int statusCode = client.responseStatusCode();
+  String response = client.responseBody();
 
-char tmp_str[7]; // formatted output buffer
-
-char* convert_int16_to_str(int16_t i) {
-  sprintf(tmp_str, "%6d", i);
-  return tmp_str;
+  Serial.print("POST Status: ");
+  Serial.println(statusCode);
+  Serial.print("Response: ");
+  Serial.println(response);
 }
 
 void setup() {
   Serial.begin(115200);
-  Serial1.begin(9600);  // GPS
-  Wire.begin();         // I2C for MPU and LCD
+  Serial1.begin(9600);  // GPS module connected to Serial1
+  Serial.println("Waiting for GPS data...");
+  while (!Serial);
 
-  // Initialize LCD
-  lcd.init();
-  lcd.backlight();
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Initializing...");
+  connectToWiFi();
 
-  // Wake up MPU-6050
-  Wire.beginTransmission(MPU_ADDR);
-  Wire.write(0x6B); // Power management register
-  Wire.write(0);    // Wake it up
-  Wire.endTransmission(true);
+  // MAX30105 setup
+  if (!particleSensor.begin(Wire, I2C_SPEED_FAST)) {
+    Serial.println("MAX30105 not found. Check wiring.");
+    while (1);
+  }
+  particleSensor.setup();
+  particleSensor.setPulseAmplitudeRed(0x0A);
+  particleSensor.setPulseAmplitudeGreen(0);
 
-  pinMode(8, OUTPUT); // Vibration motor
+  // BMP180 setup
+  if (!bmp.begin()) {
+    Serial.println("BMP180 not found. Check wiring.");
+    while (1);
+  }
+
+  // Buttons
+  pinMode(buttonK1Pin, INPUT_PULLUP);
+  pinMode(buttonK2Pin, INPUT_PULLUP);
+  pinMode(buttonK3Pin, INPUT_PULLUP);
+
+
+  Serial.println("Setup complete. Press K1 to send BPM, K2 to view temperature, K3 to print location");
 }
 
 void loop() {
-  String deviceID = getUniqueID();
+  //gps code
   while (Serial1.available()) {
     gps.encode(Serial1.read());
   }
+/*
+    if (gps.location.isValid()) {
+      Serial.println("=== GPS Location ===");
+      Serial.print("Latitude: ");
+      Serial.println(gps.location.lat(), 6);
+      Serial.print("Longitude: ");
+      Serial.println(gps.location.lng(), 6);
+    } else {
+      Serial.println("Waiting for GPS fix...");
+    }
+    */
+  // Read IR from MAX30105
+  long irValue = particleSensor.getIR();
 
-  if (millis() - lastUpdate >= updateInterval) {
-    lastUpdate = millis();
+  if (checkForBeat(irValue)) {
+    long delta = millis() - lastBeat;
+    lastBeat = millis();
+    beatsPerMinute = 60 / (delta / 1000.0);
 
-    // === Read MPU-6050 ===
-    Wire.beginTransmission(MPU_ADDR);
-    Wire.write(0x3B);
-    Wire.endTransmission(false);
-    Wire.requestFrom(MPU_ADDR, 14, true);
+    if (beatsPerMinute < 255 && beatsPerMinute > 20) {
+      rates[rateSpot++] = (byte)beatsPerMinute;
+      rateSpot %= RATE_SIZE;
 
-    accelerometer_x = Wire.read() << 8 | Wire.read();
-    accelerometer_y = Wire.read() << 8 | Wire.read();
-    accelerometer_z = Wire.read() << 8 | Wire.read();
-    temperature      = Wire.read() << 8 | Wire.read();
-    gyro_x           = Wire.read() << 8 | Wire.read();
-    gyro_y           = Wire.read() << 8 | Wire.read();
-    gyro_z           = Wire.read() << 8 | Wire.read();
-
-    bool accel_changed =
-      abs(accelerometer_x - prev_accel_x) > ACCEL_THRESHOLD ||
-      abs(accelerometer_y - prev_accel_y) > ACCEL_THRESHOLD ||
-      abs(accelerometer_z - prev_accel_z) > ACCEL_THRESHOLD;
-
-    bool gyro_changed =
-      abs(gyro_x - prev_gyro_x) > GYRO_THRESHOLD ||
-      abs(gyro_y - prev_gyro_y) > GYRO_THRESHOLD ||
-      abs(gyro_z - prev_gyro_z) > GYRO_THRESHOLD;
-
-    if (accel_changed || gyro_changed) {
-      digitalWrite(8, HIGH);
-
-      Serial.println("=== SENSOR UPDATE ===");
-
-      // === LCD Display ===
-      lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("Device ID:" + deviceID.substring(0, 16));
-        Serial.print("Device ID: ");
-        Serial.println(deviceID);
-
-      if (gps.location.isValid()) {
-        lcd.setCursor(0, 1);
-        lcd.print("Lat:");
-        lcd.print(gps.location.lat(), 1);
-
-        lcd.setCursor(0, 2);
-        lcd.print("Lon:");
-        lcd.print(gps.location.lng(), 1);
-      } else {
-        lcd.setCursor(0, 0);
-        lcd.print("Waiting for GPS fix");
-      }
-      
-
-      // Serial debug
-      Serial.print("aX = "); Serial.print(convert_int16_to_str(accelerometer_x));
-      Serial.print(" | aY = "); Serial.print(convert_int16_to_str(accelerometer_y));
-      Serial.print(" | aZ = "); Serial.print(convert_int16_to_str(accelerometer_z));
-      Serial.print(" | Temp = "); Serial.print(temperature / 340.00 + 36.53, 2);
-      Serial.print(" | gX = "); Serial.print(convert_int16_to_str(gyro_x));
-      Serial.print(" | gY = "); Serial.print(convert_int16_to_str(gyro_y));
-      Serial.print(" | gZ = "); Serial.println(convert_int16_to_str(gyro_z));
-
-      delay(1000);
-      digitalWrite(8, LOW);
-
-      // Update previous values
-      prev_accel_x = accelerometer_x;
-      prev_accel_y = accelerometer_y;
-      prev_accel_z = accelerometer_z;
-      prev_gyro_x = gyro_x;
-      prev_gyro_y = gyro_y;
-      prev_gyro_z = gyro_z;
+      beatAvg = 0;
+      for (byte x = 0; x < RATE_SIZE; x++) beatAvg += rates[x];
+      beatAvg /= RATE_SIZE;
     }
   }
+
+  // Read temperature from BMP180
+  currentTemperature = bmp.readTemperature();
+
+  // ---- K1 Press: Send heart rate ----
+  bool currentK1State = digitalRead(buttonK1Pin);
+  if (currentK1State == LOW && lastK1State == HIGH) {
+    Serial.print("K1 pressed - Avg BPM = ");
+    Serial.print(beatAvg);
+    Serial.print(", IR = ");
+    Serial.println(irValue);
+
+    if (beatAvg > 50 && beatAvg < 255 && irValue > 50000) {
+      sendHeartRateToServer(beatAvg, macAddressStr);
+    } else {
+      Serial.println("Invalid or missing heart rate. Try again.");
+    }
+  }
+  lastK1State = currentK1State;
+
+  // ---- K2 Press: Show temperature ----
+  bool currentK2State = digitalRead(buttonK2Pin);
+  if (currentK2State == LOW && lastK2State == HIGH) {
+    Serial.print("K2 pressed - Temperature: ");
+    Serial.print(currentTemperature);
+    Serial.println(" °C");
+  }
+  lastK2State = currentK2State;
+
+  // ---- K3 Press: Show location ----
+  bool currentK3State = digitalRead(buttonK3Pin);
+  if(currentK3State == LOW && lastK3State == HIGH){
+    Serial.println("K3 pressed - Location: ");
+
+
+    if (gps.location.isValid()) {
+      Serial.println("=== GPS Location ===");
+      Serial.print("Latitude: ");
+      Serial.println(gps.location.lat(), 6);
+      Serial.print("Longitude: ");
+      Serial.println(gps.location.lng(), 6);
+    } else {
+      Serial.println("Waiting for GPS fix...");
+    }
+
+  }
+
+  delay(20); // debounce
 }
