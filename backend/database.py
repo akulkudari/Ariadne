@@ -99,6 +99,18 @@ def init_db():
                 );
             """
         )
+        cursor.execute(
+            """
+           CREATE TABLE IF NOT EXISTS waypoints (
+                id SERIAL PRIMARY KEY,
+                latitude DOUBLE PRECISION NOT NULL,
+                longitude DOUBLE PRECISION NOT NULL,
+                recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                device_mac VARCHAR(17) NOT NULL,
+                name VARCHAR(255)
+            );
+            """
+        )
         conn.commit()
         print("Database initialized successfully")
     except Error as e:

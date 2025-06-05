@@ -20,6 +20,13 @@ class HealthData(BaseModel):
     device_mac: str
     heart_rate: int
 
+
+class WaypointData(BaseModel):
+    device_mac: str
+    latitude: float
+    longitude: float
+
+
 class DeviceIn(BaseModel):
     name: str
     mac: str
@@ -491,6 +498,31 @@ def add_heart_rate(data: HealthData):
         return {"message": "Heart rate added successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error adding health data: {str(e)}")
+
+@app.post("/waypoint")
+def add_waypoint(data: WaypointData):
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection error")
+
+    try:
+        cursor = conn.cursor()
+        sql = """
+            INSERT INTO waypoints (device_mac, latitude, longitude)
+            VALUES (%s, %s, %s)
+        """
+        cursor.execute(sql, (
+            data.device_mac,
+            data.latitude,
+            data.longitude
+        ))
+        conn.commit()
+        return {"message": "Waypoint added successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error adding waypoint: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.get("/community_posts")
 async def get_community_posts():
