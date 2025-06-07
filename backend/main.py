@@ -16,10 +16,16 @@ from fastapi.encoders import jsonable_encoder
 
 
 
+
 class HealthData(BaseModel):
     device_mac: str
     heart_rate: int
 
+class TripData(BaseModel):
+    length: float             
+    duration: int            
+    steps: int               
+    elevation_gain: float     
 
 class WaypointData(BaseModel):
     device_mac: str
@@ -50,6 +56,7 @@ class DeviceOut(BaseModel):
     name: str
     mac: str
     registered_at: str  # or datetime if you parse it accordingly
+
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -520,6 +527,61 @@ def add_waypoint(data: WaypointData):
         return {"message": "Waypoint added successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error adding waypoint: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.post("/trip")
+async def add_trip(data: TripData, sessionId: str = Cookie(None)):
+    user_id = await get_authenticated_user_id(sessionId)
+
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection error")
+
+    try:
+        cursor = conn.cursor()
+        sql = """
+            INSERT INTO trips
+              (length, duration, steps, elevation_gain)
+            VALUES (%s, %s, %s, %s)
+        """
+        cursor.execute(sql, (
+            data.length,
+            data.duration,
+            data.steps,
+            data.elevation_gain
+        ))
+        conn.commit()
+        return {"message": "Trip added successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error adding trip: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.get("/trips")
+async def get_trips():
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Database connection error")
+
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT 
+              id,
+              length, 
+              duration, 
+              steps, 
+              elevation_gain, 
+              created_at
+            FROM trips
+            ORDER BY created_at DESC
+        """)
+        rows = cursor.fetchall()
+        return JSONResponse(content=jsonable_encoder(rows))
     finally:
         cursor.close()
         conn.close()

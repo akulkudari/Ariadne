@@ -89,30 +89,40 @@ def init_db():
                 FOREIGN KEY (user_name) REFERENCES users(username) ON DELETE CASCADE
             );
         """)
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS health_data (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                device_mac VARCHAR(36),
-                heart_rate INT,
-                recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-            """
-        )
-        cursor.execute(
-            """
-           CREATE TABLE IF NOT EXISTS waypoints (
-                id SERIAL PRIMARY KEY,
-                latitude DOUBLE PRECISION NOT NULL,
-                longitude DOUBLE PRECISION NOT NULL,
-                recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                device_mac VARCHAR(17) NOT NULL,
-                name VARCHAR(255)
-            );
-            """
-        )
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS community_posts (
+                id         INT AUTO_INCREMENT PRIMARY KEY,
+                user_id    INT         NOT NULL,
+                message    TEXT        NOT NULL,
+                created_at TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+                FOREIGN KEY (user_id)
+                    REFERENCES users(id)
+                    ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS trips (
+                id             INT AUTO_INCREMENT PRIMARY KEY,
+                length         DOUBLE      NOT NULL,
+                duration       INT         NOT NULL,
+                steps          INT         NOT NULL,
+                elevation_gain DOUBLE      NOT NULL,
+
+                -- auto-stamp on insert
+                created_at     TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                -- auto-stamp on update
+                updated_at     TIMESTAMP   NOT NULL
+                            DEFAULT CURRENT_TIMESTAMP
+                            ON UPDATE CURRENT_TIMESTAMP,
+
+                FOREIGN KEY (user_id)
+                    REFERENCES users(id)
+                    ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
         conn.commit()
-        print("Database initialized successfully")
+        print("Database initialized successfully for trips")
     except Error as e:
         print(f"Error initializing database: {e}")
         raise
