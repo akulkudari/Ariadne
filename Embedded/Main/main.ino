@@ -5,10 +5,15 @@
 #include <ArduinoHttpClient.h>
 #include <Adafruit_BMP085.h>
 #include <TinyGPSPlus.h>
+#include <Adafruit_LSM303_U.h>
+
 
 // WiFi credentials (home network)
-const char* home_ssid = "WHOISINPARIS";
-const char* home_password = "blackpeople";
+const char* home_ssid = "";
+const char* home_password = "";
+
+Adafruit_LSM303_Mag_Unified mag = Adafruit_LSM303_Mag_Unified(12345);
+
 
 //WiFi credentials (enterprise)
 const char* enterprise_ssid = "UCSD-PROTECTED";
@@ -40,12 +45,15 @@ Adafruit_BMP085 bmp;
 float currentTemperature = 0.0;
 
 // Button pins
-const int buttonK1Pin = 3;
-const int buttonK2Pin = 2;
+const int buttonK1Pin = 2;
+const int buttonK2Pin = 3;
 const int buttonK3Pin = 4;
+const int buttonK4Pin = 5;
 bool lastK1State = HIGH;
 bool lastK2State = HIGH;
 bool lastK3State = HIGH;
+bool lastK4State = HIGH;
+
 
 void connectToWiFi() {
 
@@ -100,6 +108,22 @@ void sendHeartRateToServer(float bpm, const char* mac) {
   Serial.println(response);
 }
 
+double calculateBearing(double lat1, double lon1, double lat2, double lon2) {
+  lat1 = radians(lat1);
+  lon1 = radians(lon1);
+  lat2 = radians(lat2);
+  lon2 = radians(lon2);
+
+  double dLon = lon2 - lon1;
+
+  double y = sin(dLon) * cos(lat2);
+  double x = cos(lat1) * sin(lat2) -
+             sin(lat1) * cos(lat2) * cos(dLon);
+  double bearing = atan2(y, x);
+  bearing = degrees(bearing);
+  return fmod((bearing + 360), 360); // normalize to 0-360
+}
+
 void setup() {
   Serial.begin(115200);
   Serial1.begin(9600);  // GPS module connected to Serial1
@@ -122,11 +146,18 @@ void setup() {
     Serial.println("BMP180 not found. Check wiring.");
     while (1);
   }
+  //LSM303HLDC setup
+   if (!mag.begin()) {
+    Serial.println("LSM303 magnetometer not found. Check wiring.");
+    while (1);
+  }
 
   // Buttons
   pinMode(buttonK1Pin, INPUT_PULLUP);
   pinMode(buttonK2Pin, INPUT_PULLUP);
   pinMode(buttonK3Pin, INPUT_PULLUP);
+  pinMode(buttonK4Pin, INPUT_PULLUP);
+
 
 
   Serial.println("Setup complete. Press K1 to send BPM, K2 to view temperature, K3 to print location");
@@ -244,6 +275,53 @@ if (lastK3State == HIGH && currentK3State == LOW) {
   }
 }
 lastK3State = currentK3State;
+
+//K4 button handling
+bool currentK4State = digitalRead(buttonK4Pin);
+if (lastK4State == HIGH && currentK4State == LOW) {
+  if (gps.location.isValid()) {
+    double lat1 = gps.location.lat();
+    double lon1 = gps.location.lng();
+
+    // Target location
+    double lat2 = 32.880947;
+    double lon2 = -117.237804;
+
+    // Calculate bearing to destination
+    double bearingToTarget = calculateBearing(lat1, lon1, lat2, lon2);
+
+    // Get compass heading
+    sensors_event_t event;
+    mag.getEvent(&event);
+
+    float heading = atan2(-event.magnetic.y, -event.magnetic.x);
+    if (heading < 0) heading += 2 * PI;
+    float headingDegrees = heading * 180 / PI;
+
+    // Calculate turn direction
+    float difference = bearingToTarget - headingDegrees;
+    if (difference < -180) difference += 360;
+    if (difference > 180) difference -= 360;
+
+    Serial.print("Heading: ");
+    Serial.print(headingDegrees);
+    Serial.print("°, Bearing to target: ");
+    Serial.print(bearingToTarget);
+    Serial.print("°, Turn: ");
+
+    if (abs(difference) < 10) {
+      Serial.println("You're facing the target!");
+    } else if (difference > 0) {
+      Serial.println("Turn RIGHT towards target.");
+    } else {
+      Serial.println("Turn LEFT towards target.");
+    }
+
+  } else {
+    Serial.println("Waiting for GPS fix...");
+  }
+}
+lastK4State = currentK4State;
 
   delay(20); // debounce
 }
