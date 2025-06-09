@@ -7,6 +7,7 @@ import Navigation from './components/Navigation/navboard';
 import Community from './components/Community/community';
 import Health from './components/Health/health';
 import Profile from './components/Profile/profile';
+import Waypoints from './components/Waypoints/waypoints';
 import './App.css';
 
 function HomePage() {
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="/community" element={<Community />} />
           <Route path="/health" element={<Health />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/waypoints" element={<Waypoints />} />
         </Routes>
       </div>
     </Router>

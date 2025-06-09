@@ -6,6 +6,7 @@ from fastapi.responses import FileResponse, RedirectResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from mysql.connector import Error
 import uuid, time, logging, os
+from typing import Optional
 from passlib.context import CryptContext
 import backend.database as db
 from backend.database import init_db, get_db_connection
@@ -16,6 +17,8 @@ from fastapi.encoders import jsonable_encoder
 
 
 
+class BioUpdate(BaseModel):
+    bio: str
 
 class HealthData(BaseModel):
     device_mac: str
@@ -103,6 +106,34 @@ async def get_authenticated_user_id(sessionId: str = Cookie(None)) -> int:
     finally:
         cursor.close()
         conn.close()
+
+@app.get("/username")
+async def get_username(sessionId: str = Cookie(None)):
+    user_id = await get_authenticated_user_id(sessionId)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    conn = db.get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Database connection error")
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT username FROM users WHERE id = %s", (user_id,))
+        result = cursor.fetchone()
+
+        if not result:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        return {"username": result[0]}
+
+    except Error as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+
+    finally:
+        cursor.close()
+        conn.close()
+
 
 @app.get("/user_auth")
 async def authenticate_user(sessionId: str = Cookie(None)):
@@ -245,6 +276,42 @@ async def userlogin(request: Request, creds: LoginData):
     finally:
         cursor.close()
         conn.close()
+
+@app.put("/profile")
+async def update_bio(bio_update: BioUpdate, sessionId: str = Cookie(None)):
+    user_id = await get_authenticated_user_id(sessionId)
+    bio_text = bio_update.bio or ""
+    conn = db.get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            INSERT INTO profiles (user_id, bio)
+            VALUES (%s, %s)
+            ON DUPLICATE KEY UPDATE bio = VALUES(bio)
+        """, (user_id, bio_text))
+        conn.commit()
+    except Exception as e:
+        tb = traceback.format_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to update bio: {str(e)}\n{tb}")
+    return {"message": "Bio updated successfully", "bio": bio_text}
+
+@app.get("/bio")
+async def get_userbio(sessionId: str = Cookie(None)):
+    user_id = await get_authenticated_user_id(sessionId)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    conn = db.get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT bio FROM profiles WHERE user_id = %s", (user_id,))
+    result = cursor.fetchone()
+
+    if result:
+        return {"bio": result[0]}
+    else:
+        return {"bio": ""}
 
 @app.delete("/login")
 async def logout(sessionId: str = Cookie(None)):
@@ -531,11 +598,27 @@ def add_waypoint(data: WaypointData):
         cursor.close()
         conn.close()
 
+@app.get("/waypoints")
+def get_all_waypoints():
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection error")
+
+    try:
+        cursor = conn.cursor(dictionary=True)  # Use dictionary=True to return column names in the response
+        cursor.execute("SELECT * FROM waypoints")
+        waypoints = cursor.fetchall()
+        return {"waypoints": waypoints}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving waypoints: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
 
 @app.post("/trip")
 async def add_trip(data: TripData, sessionId: str = Cookie(None)):
     user_id = await get_authenticated_user_id(sessionId)
-
     conn = get_db_connection()
     if not conn:
         raise HTTPException(status_code=500, detail="Database connection error")
@@ -544,18 +627,21 @@ async def add_trip(data: TripData, sessionId: str = Cookie(None)):
         cursor = conn.cursor()
         sql = """
             INSERT INTO trips
-              (length, duration, steps, elevation_gain)
-            VALUES (%s, %s, %s, %s)
+              (length, duration, user_id, steps, elevation_gain)
+            VALUES (%s, %s, %s, %s, %s)
         """
         cursor.execute(sql, (
             data.length,
             data.duration,
+            user_id,
             data.steps,
             data.elevation_gain
         ))
         conn.commit()
         return {"message": "Trip added successfully"}
     except Exception as e:
+        traceback_str = traceback.format_exc()
+        print("Error traceback:\n", traceback_str)
         raise HTTPException(status_code=500, detail=f"Error adding trip: {str(e)}")
     finally:
         cursor.close()

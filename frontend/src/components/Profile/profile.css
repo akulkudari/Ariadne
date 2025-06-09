@@ -141,6 +141,28 @@
   margin-bottom: 0.25rem;
 }
 
+.trips-list {
+  list-style: none;
+  padding: 0;
+}
+
+.trips-list__item {
+  background-color: #e0f8e0; /* light green */
+  border-left: 4px solid #4CAF50;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  color: #2e7d32;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', sans-serif;
+  transition: transform 0.2s ease;
+}
+
+.trips-list__item:hover {
+  transform: scale(1.02);
+}
+
+
 .device-form__group input {
   width: 100%;
   padding: 0.5rem;

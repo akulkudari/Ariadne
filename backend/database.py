@@ -48,6 +48,13 @@ def init_db():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS profiles (
+                user_id INT NOT NULL UNIQUE,
+                bio VARCHAR(300),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+        """)
         # sessions table
         cursor.execute("""
                 CREATE TABLE IF NOT EXISTS sessions (
@@ -68,15 +75,14 @@ def init_db():
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
         """)
-        #location_data table
+        #waypoints table
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS location_data (
+            CREATE TABLE IF NOT EXISTS waypoints (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                device_id INT NOT NULL,
+                device_mac VARCHAR(17) NOT NULL,
                 latitude DECIMAL(9,6),
                 longitude DECIMAL(9,6),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
         #health_data table
@@ -107,6 +113,7 @@ def init_db():
                 length         DOUBLE      NOT NULL,
                 duration       INT         NOT NULL,
                 steps          INT         NOT NULL,
+                user_id        INT         NOT NULL,
                 elevation_gain DOUBLE      NOT NULL,
 
                 -- auto-stamp on insert
@@ -119,7 +126,7 @@ def init_db():
                 FOREIGN KEY (user_id)
                     REFERENCES users(id)
                     ON DELETE CASCADE
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            )
             """)
         conn.commit()
         print("Database initialized successfully for trips")

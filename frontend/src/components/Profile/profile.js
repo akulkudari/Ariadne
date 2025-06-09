@@ -8,6 +8,9 @@ import avatarImg from '../../assets/images/avatar.jpg';
 
 function ProfilePage() {
   const navigate = useNavigate();
+  const [bio, setBio] = useState('');
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [bioMessage, setBioMessage] = useState('');
   const [selectedTab, setSelectedTab] = useState('register');
   const [currentUsername, setCurrentUsername] = useState("");
 
@@ -134,40 +137,45 @@ function ProfilePage() {
   
   const handleTripSubmit = (e) => {
     e.preventDefault();
-
-    // Basic front-end validation (all fields required)
+  
     if (!tripLength || !tripDuration || !tripSteps || !tripElevation) {
       setTripMessage('Please fill out every field.');
       return;
     }
-
-    // Build JSON payload
+  
     const payload = {
       length: parseFloat(tripLength),
       duration: parseInt(tripDuration, 10),
       steps: parseInt(tripSteps, 10),
       elevation_gain: parseFloat(tripElevation),
     };
-
+  
     fetch('http://localhost:9000/trip', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Failed to log trip.');
+        }
+        return res.json();
+      })
       .then((data) => {
         setTripMessage(data.message || 'Trip logged successfully.');
         setTripLength('');
         setTripDuration('');
         setTripSteps('');
         setTripElevation('');
+        fetchTrips();  // ✅ Refetch the trips list and re-render updated stats
       })
       .catch((err) => {
         console.error('Failed to log trip:', err);
         setTripMessage('Failed to log trip.');
       });
   };
+  
 
 
   // Helper to format “duration” nicely (seconds → Hh Mm Ss)
@@ -196,13 +204,57 @@ function ProfilePage() {
                 className="profile__avatar"
               />
               <div className="profile__bio">
-                <p>
-                  Hi—I’m Chloe, an avid hiker who loves exploring new trails
-                  and capturing scenic mountaintop views. When I’m not on the
-                  trail, I’m planning my next outdoor adventure and tracking my
-                  performance stats. Let’s keep climbing!
-                </p>
-              </div>
+  {isEditingBio ? (
+    <>
+      <textarea
+        value={bio}
+        onChange={(e) => setBio(e.target.value)}
+        maxLength={300}
+        rows={5}
+        style={{ width: '100%' }}
+      />
+      <button
+        className="profile__button"
+        onClick={() => {
+          fetch("http://localhost:9000/profile", {
+            method: "PUT",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ bio }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              setBioMessage(data.message || "Bio updated!");
+              setIsEditingBio(false);
+            })
+            .catch(() => {
+              setBioMessage("Failed to update bio.");
+            });
+        }}
+      >
+        Save Bio
+      </button>
+      <button
+        className="profile__button profile__button--secondary"
+        onClick={() => setIsEditingBio(false)}
+      >
+        Cancel
+      </button>
+      {bioMessage && <p className="device-form__message">{bioMessage}</p>}
+    </>
+  ) : (
+    <>
+      <p>{bio || "No bio set yet."}</p>
+      <button
+        className="profile__button profile__button--small"
+        onClick={() => setIsEditingBio(true)}
+      >
+        Edit Bio
+      </button>
+    </>
+  )}
+</div>
+
             </div>
 
             <div className="profile__cards">
