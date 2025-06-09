@@ -21,7 +21,7 @@ const char* enterprise_username = "";   // usually your login
 const char* enterprise_password = "";   // your enterprise Wi-Fi password 
 char macAddressStr[18];
 
-const char* server = "192.168.1.20";
+const char* server = "";
 const int port = 9000;
 WiFiClient wifi;
 HttpClient client = HttpClient(wifi, server, port);
