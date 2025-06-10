@@ -8,6 +8,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import './navboard.css';
 import Header from '../Header/header'
 
+
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWt1ZGFyaSIsImEiOiJjbWFvam5tM3owNjgxMmtvOHZpYzNlbWdwIn0.hx9QD3NKieHATfs_btT-bw';
 
 export default function NavBoard() {

@@ -20,6 +20,10 @@ from fastapi.encoders import jsonable_encoder
 class BioUpdate(BaseModel):
     bio: str
 
+class TemperatureData(BaseModel):
+    mac: str
+    temperature: float
+
 class HealthData(BaseModel):
     device_mac: str
     heart_rate: int
@@ -539,10 +543,10 @@ async def get_health_data(sessionId: str = Cookie(None)):
         # Use SQL IN clause for mac addresses
         format_strings = ','.join(['%s'] * len(macs))
         cursor.execute(f"""
-            SELECT device_mac, heart_rate, recorded_at
+            SELECT device_mac, heart_rate, created_at
             FROM health_data
             WHERE device_mac IN ({format_strings})
-            ORDER BY recorded_at ASC
+            ORDER BY created_at ASC
         """, tuple(macs))
 
         rows = cursor.fetchall()
@@ -614,7 +618,85 @@ def get_all_waypoints():
     finally:
         cursor.close()
         conn.close()
+@app.get("/user_waypoints")
+async def get_user_waypoints(sessionId: str = Cookie(None)):
+    if not sessionId:
+        raise HTTPException(status_code=401, detail="Session ID missing")
 
+    user_id = await get_authenticated_user_id(sessionId)
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection error")
+
+    try:
+        cursor = conn.cursor()
+
+        # Step 1: Get all device MACs for the user
+        cursor.execute("SELECT mac FROM devices WHERE user_id = %s", (user_id,))
+        mac_rows = cursor.fetchall()
+
+        if not mac_rows:
+            return {"waypoints": []}
+
+        user_macs = tuple(row[0] for row in mac_rows)
+
+        # Step 2: Build dynamic query for device_mac IN (%s, %s, ...)
+        placeholders = ','.join(['%s'] * len(user_macs))
+        query = f"""
+            SELECT id, device_mac, latitude, longitude, created_at
+            FROM waypoints
+            WHERE device_mac IN ({placeholders})
+            ORDER BY created_at
+        """
+        cursor.execute(query, user_macs)
+
+        rows = cursor.fetchall()
+        waypoints = [
+            {
+                "id": row[0],
+                "mac": row[1],
+                "latitude": row[2],
+                "longitude": row[3],
+                "created_at": row[4].isoformat()
+            }
+            for row in rows
+        ]
+
+        return {"waypoints": waypoints}
+
+    except Exception as e:
+        traceback_str = traceback.format_exc()
+        print("Error traceback:\n", traceback_str)
+        raise HTTPException(status_code=500, detail=f"Error fetching user waypoints: {str(e)}")
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.post("/temperature")
+def add_temperature(data: TemperatureData):
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection error")
+
+    try:
+        cursor = conn.cursor()
+        sql = """
+            INSERT INTO temperature (mac, temperature)
+            VALUES (%s, %s)
+        """
+        cursor.execute(sql, (
+            data.mac,
+            data.temperature
+        ))
+        conn.commit()
+        return {"message": "Temperature added successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error adding temperature: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.post("/trip")
 async def add_trip(data: TripData, sessionId: str = Cookie(None)):

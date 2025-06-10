@@ -54,7 +54,7 @@ function Header() {
       <nav className="dashboard__nav">
         <a href="/dashboard" className="dashboard__nav-link">Home</a>
         <a href="/health" className="dashboard__nav-link">Health Tracker</a>
-        <a href="/nav" className="dashboard__nav-link">Navigation</a>
+        <a href="/waypoints" className="dashboard__nav-link">Waypoints</a>
         <a href="/community" className="dashboard__nav-link">Community</a>
         <a href="/profile" className="dashboard__nav-link">Profile: {username}</a>
         <button className="dashboard__logout-button" onClick={handleLogout}>

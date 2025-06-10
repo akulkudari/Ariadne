@@ -75,6 +75,15 @@ def init_db():
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
         """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS temperature (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                mac VARCHAR(36),
+                temperature FLOAT,
+                logged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        
         #waypoints table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS waypoints (
@@ -86,6 +95,14 @@ def init_db():
             );
         """)
         #health_data table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS health_data (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                device_mac VARCHAR(17) NOT NULL,
+                heart_rate INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS community_posts (
                 id INT AUTO_INCREMENT PRIMARY KEY,
