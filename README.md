@@ -15,7 +15,7 @@ In this project we developed a fullstack web application with integration for an
    - [Health](#health)
    - [Community](#community)
    - [User Profile](#user-profile)
-
+   - [Database Internals](#database-internals)
 # Product Summary:
 Ariadne is a Smart Hiking Stick with many features including navigation, health monitoring via heartrate and pulse oximetry, step and distance tracking, environmental readings, and waypoint marking to provide hikers with advanced safety and information on hikes. Our device syncs wirelessly to the internet when a connection is available to upload all data to your account, where you can view it via our corresponding web application. If you're not connected to the internet, the device has onboard storage, via an SD card, where your data like location, heart rate, temperature, and waypoints are stored, so that when you come back online, it syncs with your account and uploads this data.
 
@@ -65,4 +65,6 @@ this will start the React website on your local machine, where you can view our 
 # User Profile
 <img width="1892" height="905" alt="Ariadne Profile" src="https://github.com/user-attachments/assets/ce68a6b7-ff15-47b5-8e97-0c90f4d15493" />
 
+# Database Internals
+<img width="1837" height="913" alt="image" src="https://github.com/user-attachments/assets/ee2a4f86-5752-4264-9bf0-38eca411faa6" />
 
