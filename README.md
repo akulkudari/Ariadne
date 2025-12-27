@@ -1,5 +1,7 @@
 # Ariadne: A Smart Hiking Stick
 
+In this project we developed a fullstack web application with integration for an IoT enabled Embedded Systems Device which we engineered with the purpose of aiding hikers with data like step counts, elevation, temperature, heartrate, directions, and more. The device would be able to navigate with no data using downloaded directions, and store waypoints in an offline storage card, which would sync to your account when you logged back in and connected to WiFi. We used React for the frontend and FastAPI for the backend API points, as well as MySQL for the backend database and information storage such as user accounts, health data, location data, waypoints etc. For our IoT device we used an Arduino Nano 33 IoT, along with peripherals like a GPS, Pulse Oximeter, LCD Screen, Magnetometer, Temperature and Humidity sensors, and an external 9V rechargeable battery pack for power.
+
 ## Table of Contents
 1. [Product Summary](#product-summary)
 2. [Backend Setup](#backend-setup)
